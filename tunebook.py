@@ -1,6 +1,7 @@
 import os
 import codecs
 import tempfile
+from copy import deepcopy
 
 class AbcTune(dict):
     """Represents a single tune from an ABC tunebook; a dict whose
@@ -15,7 +16,8 @@ contents are the top-level properties of the tune.  Also has:
         self.title = ""
         self.content = ""
     def write_svg(self, filename):
-        """Write an SVG file of the first page of the tune to the specified filename"""
+        """Write an SVG file of the first page of the tune to the specified
+filename"""
 
         # write the tune to a temp file
         with tempfile.NamedTemporaryFile() as f:
@@ -33,8 +35,8 @@ contents are the top-level properties of the tune.  Also has:
                 "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
         
 
-# order of encodings to try, emphasizing Western languages, in order
-# by prevalence on the web
+# order of encodings to try when opening files, ordered by prevalence
+# on the web, emphasizing Western languages
 _encodings = ["utf-8",
               "ISO-8859-1",
               "Windows-1251",

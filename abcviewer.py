@@ -134,9 +134,11 @@ class AbcViewer(QMainWindow):
         self.abc_display.load(self.tmp_svg)
 
     def _print(self, *args, **kwargs):
-        # TODO: fit the display to the real page dimensions instead of this approximation
+        # TODO: fit the display to the real page dimensions instead of
+        # this approximation
         
-        # save the fit for display and change to fit the whole page, which is okay for most printers
+        # save the fit for display and change to fit the whole page,
+        # which is okay for most printers
         old_fit = self.abc_display.fit_style
         self.abc_display.fit_style = fits.FIT_ALL
         
