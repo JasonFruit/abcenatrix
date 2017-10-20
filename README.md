@@ -16,6 +16,7 @@ Capabilities:
  - Lists tunes by title
  - Displays tunes
  - Prints tunes
+ - Transposes tunes
  
 Future plans:
 ----------------------------------------------------------------------
@@ -24,5 +25,4 @@ In the future I plan to make this:
 
  - portable to inferior operating systems
  - able to play tunes
- - able to transpose tunes
  - able to copy tunes to user-defined tunebooks
