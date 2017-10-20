@@ -31,7 +31,6 @@ class ScrollableSvgWidget(QSvgWidget):
 
         if self.fit_style == fits.FIT_ALL or self.fit_style == fits.FIT_HEIGHT:
             scale_by = self.visible_height / default_height
-            print("fitting to height, ratio %s" % scale_by)
             new_width = default_width * scale_by
             new_size = QSize(widget_width, self.visible_height)
             self.resize(new_size)
@@ -43,7 +42,6 @@ class ScrollableSvgWidget(QSvgWidget):
             
         elif self.fit_style == fits.FIT_WIDTH:
             scale_by = widget_width / default_width
-            print("fitting to width, ratio %s" % scale_by)
             new_height = default_height * scale_by
             new_size = QSize(widget_width, new_height)
             self.resize(new_size)

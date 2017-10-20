@@ -13,11 +13,12 @@ class TuneListItem(QListWidgetItem):
     def __init__(self, tune):
         QListWidgetItem.__init__(self, tune.title)
         self.tune = tune
-        
+
 class AbcViewer(QMainWindow):
     def __init__(self, filename=None):
         QMainWindow.__init__(self)
 
+        self._current_tune = None
         self._setUpMenus()
 
         # there must be one main widget, so we need this one; we'll
@@ -61,7 +62,8 @@ class AbcViewer(QMainWindow):
         # top-level menus
         self.file_menu = self.menuBar().addMenu("&File")
         self.view_menu = self.menuBar().addMenu("Vie&w")
-
+        self.tune_menu = self.menuBar().addMenu("&Tune")
+        
         # open and print go in the file menu
         self.file_open = QAction("&Open", self)
         self.file_open.setShortcut("Ctrl+O")
@@ -89,6 +91,11 @@ class AbcViewer(QMainWindow):
         self.view_fit_menu.addAction(self.view_fit_width)
         self.view_fit_menu.addAction(self.view_fit_height)
         self.view_fit_menu.addAction(self.view_fit_all)
+
+        self.tune_transpose = QAction("Transpose", self)
+        self.tune_transpose.triggered.connect(self._transpose)
+
+        self.tune_menu.addAction(self.tune_transpose)
 
     def _fit_width(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_WIDTH
@@ -119,7 +126,7 @@ class AbcViewer(QMainWindow):
         
         for tune in sorted(self.abc_file, key=lambda t: t.title):
             self.title_list.addItem(TuneListItem(tune))
-        
+
     def _on_index_change(self, current, previous):
         # try to delete the last temp SVG file
         if self.tmp_svg:
@@ -128,9 +135,13 @@ class AbcViewer(QMainWindow):
             except:
                 pass # oh well
 
+        self._current_tune = current.tune
+        self.display_current_tune()
+
+    def display_current_tune(self):
         #export the selected tune as an SVG and display it
         self.tmp_svg = "/tmp/%s.svg" % uuid4()
-        current.tune.write_svg(self.tmp_svg)
+        self._current_tune.write_svg(self.tmp_svg)
         self.abc_display.load(self.tmp_svg)
 
     def _print(self, *args, **kwargs):
@@ -151,6 +162,19 @@ class AbcViewer(QMainWindow):
 
         # reset the fit for screen display
         self.abc_display.fit_style = old_fit
+
+    def _transpose(self, *args, **kwargs):
+        steps, accept = QInputDialog.getInteger(self,
+                                                "Transpose Tune",
+                                                "Semitones",
+                                                value=0,
+                                                min=-12,
+                                                max=12)
+
+        if accept:
+            self._current_tune = self._current_tune.copy()
+            self._current_tune.transpose(steps)
+            self.display_current_tune()
 
     def resizeEvent(self, *args, **kwargs):
         """resize the ABC display to match the new window size"""

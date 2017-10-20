@@ -2,6 +2,7 @@ import os
 import codecs
 import tempfile
 from copy import deepcopy
+from subprocess import check_output, PIPE
 
 class AbcTune(dict):
     """Represents a single tune from an ABC tunebook; a dict whose
@@ -33,6 +34,19 @@ filename"""
             # move the whatnot001.svg file to whatnot.svg
             os.system(
                 "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
+            
+    def copy(self):
+        """Return a deep copy of the tune; e.g. for modification, leaving the
+original unchanged."""
+        return deepcopy(self)
+
+    def transpose(self, semitones):
+        """Transpose the tune to a new key"""
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(bytes(self.content, "utf-8"))
+            f.flush()
+            self.content = check_output(["abc2abc", f.name, "-e",  "-t", str(semitones)]).decode("utf-8")
+            f.close()
         
 
 # order of encodings to try when opening files, ordered by prevalence
