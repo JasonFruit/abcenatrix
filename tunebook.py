@@ -2,7 +2,7 @@ import os
 import codecs
 import tempfile
 from copy import deepcopy
-from subprocess import check_output, PIPE
+from subprocess import check_output
 
 class AbcTune(dict):
     """Represents a single tune from an ABC tunebook; a dict whose
@@ -101,7 +101,7 @@ filename and a method to return a sorted list of titles"""
             elif line.strip().startswith("X:"):
                 # tune is None if you haven't started one before
                 if tune:
-                    self.append(tune)
+                    list.append(self, tune)
                 tune = AbcTune(int(line.replace("X:", "").strip()))
             # T: is the title; store the first and ignore the rest
             elif line.strip().startswith("T:"):
@@ -124,8 +124,31 @@ filename and a method to return a sorted list of titles"""
 
         # there's probably one last tune to add
         if tune:
-            self.append(tune)
+            list.append(self, tune)
 
     def titles(self):
         """Return a sorted list of tune titles"""
         return sorted([tune.title for tune in self])
+
+    def renumber(self):
+        """Renumber tunes with sequential xrefs"""
+        xref = 1
+        for tune in self:
+            tune.xref = xref
+            xref_line = [line for line in tune.content.split("\n")
+                         if line.strip().startswith("X:")][0]
+            tune.content = tune.content.replace(xref_line,
+                                                "X:%s" % xref)
+            xref += 1
+
+    def write(self, fn):
+        """Save the tunebook to a file"""
+        self.renumber() # in case of duplicate xrefs
+        with codecs.open(fn, "w", "utf-8") as f:
+            f.write("\n\n".join([tune.content
+                                 for tune in self]))
+            
+    def append(self, tune):
+        """Add a tune to the tunebook"""
+        list.append(self, tune)
+        self.renumber() # redo xref numbering to keep unique
