@@ -97,6 +97,19 @@ class AbcViewer(QMainWindow):
 
         self.tune_menu.addAction(self.tune_transpose)
 
+        self.tune_add_to_book = QAction("&Copy to existing tunebook", self)
+        self.tune_add_to_book.setStatusTip("Copy tune to an existing ABC file")
+        self.tune_add_to_book.triggered.connect(self._add_tune_to_tunebook)
+
+        self.tune_menu.addAction(self.tune_add_to_book)
+
+        self.tune_add_to_new_book = QAction("&Add to new tunebook", self)
+        self.tune_add_to_new_book.setStatusTip("Create a new ABC file with only this tune")
+        self.tune_add_to_new_book.triggered.connect(self._add_tune_to_new_tunebook)
+
+        self.tune_menu.addAction(self.tune_add_to_new_book)
+
+
     def _fit_width(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_WIDTH
         self.abc_display.repaint()
@@ -111,11 +124,13 @@ class AbcViewer(QMainWindow):
         
     def _prompt_load(self):
         """Prompt for a file to load"""
-        filename = QFileDialog.getOpenFileName(self,
-                                               "Open Tunebook",
-                                               "~",
-                                               "ABC files (*.abc *.abc.txt)")[0]
-        self._load(filename)
+        filename, accept = QFileDialog.getOpenFileName(self,
+                                                       "Open Tunebook",
+                                                       os.environ["HOME"],
+                                                       "ABC tunebooks (*.abc *.abc.txt)")
+
+        if accept:
+            self._load(filename)
 
     def _load(self, filename):
         """Load a new ABC file"""
@@ -124,7 +139,7 @@ class AbcViewer(QMainWindow):
 
         self.title_list.clear()
         
-        for tune in sorted(self.abc_file, key=lambda t: t.title):
+        for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
 
     def _on_index_change(self, current, previous):
@@ -176,11 +191,45 @@ class AbcViewer(QMainWindow):
             self._current_tune.transpose(steps)
             self.display_current_tune()
 
+    def _add_tune_to_tunebook(self, *args, **kwargs):
+        """Prompt for a tunebook file to add tune to"""
+        filename, accept = QFileDialog.getOpenFileName(self,
+                                                       "Add to Tunebook",
+                                                       os.environ["HOME"],
+                                                       "ABC tunebooks (*.abc *.abc.txt)")
+        if accept:
+            out_tb = AbcTunebook(filename)
+            out_tb.append(self._current_tune)
+            out_tb.write(filename)
+
+    def _add_tune_to_new_tunebook(self, *args, **kwargs):
+        """Prompt for a tunebook file to add tune to"""
+        filename, accept = QFileDialog.getSaveFileName(self,
+                                                       "Create New Tunebook",
+                                                       os.path.join(os.environ["HOME"],
+                                                                    "new.abc"),
+                                                       "ABC tunebooks (*.abc *.abc.txt)")
+
+        if accept:
+            if not filename.endswith(".abc"):
+                filename = filename + ".abc"
+                
+            out_tb = AbcTunebook()
+            out_tb.append(self._current_tune)
+            out_tb.write(filename)
+
     def resizeEvent(self, *args, **kwargs):
         """resize the ABC display to match the new window size"""
         self.abc_display.visible_width, self.abc_display.visible_height = self.scroll_area.size().toTuple()
 
+home_dir = os.path.join(os.environ["HOME"],
+                        ".abcviewer")
 
+if not os.path.exists(home_dir):
+    os.mkdir(home_dir)
+
+    
+        
 # if there's a filename passed in as an argument, load it; otherwise
 # start empty
 try:

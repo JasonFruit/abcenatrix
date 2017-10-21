@@ -69,11 +69,14 @@ class LoadError(Exception):
 class AbcTunebook(list):
     """Represents a tunebook file in ABC format; a list of tunes with a
 filename and a method to return a sorted list of titles"""
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         list.__init__(self)
-        self.filename = filename
-        self._load()
-        
+        if filename:
+            self.filename = filename
+            self._load()
+        else:
+            self.filename = ""
+
     def _load(self, encoding="utf-8"):
         """load the tunebook filename"""
         
@@ -128,7 +131,7 @@ filename and a method to return a sorted list of titles"""
 
     def titles(self):
         """Return a sorted list of tune titles"""
-        return sorted([tune.title for tune in self])
+        return [tune.title for tune in self]
 
     def renumber(self):
         """Renumber tunes with sequential xrefs"""
