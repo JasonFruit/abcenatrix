@@ -160,9 +160,6 @@ class AbcViewer(QMainWindow):
         self.abc_display.load(self.tmp_svg)
 
     def _print(self, *args, **kwargs):
-        # TODO: fit the display to the real page dimensions instead of
-        # this approximation
-        
         # save the fit for display and change to fit the whole page,
         # which is okay for most printers
         old_fit = self.abc_display.fit_style
@@ -171,9 +168,14 @@ class AbcViewer(QMainWindow):
         printDialog = QPrintDialog(self)
 
         if printDialog.exec_() == QDialog.Accepted:
+            pageSize = (printDialog.printer().width(),
+                        printDialog.printer().height())
             painter = QPainter()
             painter.begin(printDialog.printer())
-            self.abc_display.render(painter, QPoint())
+            self.abc_display.renderer().render(painter, QRect(0,
+                                                              0,
+                                                              pageSize[0],
+                                                              pageSize[1]))
 
         # reset the fit for screen display
         self.abc_display.fit_style = old_fit

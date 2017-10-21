@@ -26,6 +26,7 @@ filename"""
             f.flush()
 
             # convert to an SVG; abcm2ps adds 001 to the base filename
+            # (and for succeeding pages, 002, 003 …)
             os.system(
                 "abcm2ps -v -O %(filename)s %(tmpfile)s" %
                 {"filename": filename,
@@ -42,11 +43,14 @@ original unchanged."""
 
     def transpose(self, semitones):
         """Transpose the tune to a new key"""
+        self._replace_with_abc2abc_output(["-e",  "-t", str(semitones)])
+
+    def _replace_with_abc2abc_output(self, abc2abc_args):
         with tempfile.NamedTemporaryFile() as f:
             f.write(bytes(self.content, "utf-8"))
             f.flush()
-            self.content = check_output(["abc2abc", f.name, "-e",  "-t", str(semitones)]).decode("utf-8")
-            f.close()
+            
+            self.content = check_output(["abc2abc", f.name] + abc2abc_args).decode("utf-8")
         
 
 # order of encodings to try when opening files, ordered by prevalence
