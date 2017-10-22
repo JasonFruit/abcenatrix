@@ -1,13 +1,11 @@
 import os, sys
 import codecs
 from uuid import uuid4
-from tunebook import AbcTune, AbcTunebook
-from scrollable_svg import ScrollableSvgWidget, fits
+from abcv.tunebook import AbcTune, AbcTunebook
+from abcv.scrollable_svg import ScrollableSvgWidget, fits
 
 from PySide.QtCore import *
 from PySide.QtGui import *
-
-qt_app = QApplication(sys.argv)
 
 class TuneListItem(QListWidgetItem):
     def __init__(self, tune):
@@ -226,23 +224,3 @@ class AbcViewer(QMainWindow):
         """resize the ABC display to match the new window size"""
         self.abc_display.visible_width, self.abc_display.visible_height = self.scroll_area.size().toTuple()
 
-home_dir = os.path.join(os.environ["HOME"],
-                        ".abcviewer")
-
-if not os.path.exists(home_dir):
-    os.mkdir(home_dir)
-
-    
-        
-# if there's a filename passed in as an argument, load it; otherwise
-# start empty
-try:
-    fn = sys.argv[1]
-    app = AbcViewer(fn)
-except:
-    app = AbcViewer()
-    
-app.showMaximized()
-
-# Run the application's event loop
-qt_app.exec_()

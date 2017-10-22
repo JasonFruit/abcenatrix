@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+from abcv.abcviewer import *
+from abcv.tunebook import *
+
+qt_app = QApplication(sys.argv)
+
+home_dir = os.path.join(os.environ["HOME"],
+                        ".abcviewer")
+
+if not os.path.exists(home_dir):
+    os.mkdir(home_dir)
+
+# if there's a filename passed in as an argument, load it; otherwise
+# start empty
+try:
+    fn = sys.argv[1]
+    app = AbcViewer(fn)
+except:
+    app = AbcViewer()
+    
+app.showMaximized()
+
+# Run the application's event loop
+qt_app.exec_()
