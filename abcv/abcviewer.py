@@ -3,6 +3,7 @@ import codecs
 from uuid import uuid4
 from abcv.tunebook import AbcTune, AbcTunebook
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
+from abcv.tune_editor import edit_tune
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -60,15 +61,21 @@ class AbcViewer(QMainWindow):
             
     def _setUpMenus(self):
         # top-level menus
-        self.file_menu = self.menuBar().addMenu("&File")
+        self.file_menu = self.menuBar().addMenu("Tune&book")
         self.view_menu = self.menuBar().addMenu("Vie&w")
         self.tune_menu = self.menuBar().addMenu("&Tune")
         
         # open and print go in the file menu
         self.file_open = QAction("&Open", self)
         self.file_open.setShortcut("Ctrl+O")
-        self.file_open.setStatusTip("Open an ABC file")
+        self.file_open.setStatusTip("Open a tunebook")
         self.file_open.triggered.connect(self._prompt_load)
+
+        # save and print go in the file menu
+        self.file_save = QAction("&Save", self)
+        self.file_save.setShortcut("Ctrl+S")
+        self.file_save.setStatusTip("Save the tunebook")
+        self.file_save.triggered.connect(self._save_tunebook)
 
         self.file_print = QAction("&Print", self)
         self.file_print.setShortcut("Ctrl+P")
@@ -77,6 +84,7 @@ class AbcViewer(QMainWindow):
 
         self.file_menu.addAction(self.file_open)
         self.file_menu.addAction(self.file_print)
+        self.file_menu.addAction(self.file_save)
 
         # fit choices go in a Fit submenu of the view menu
         self.view_fit_menu = self.view_menu.addMenu("Fit")
@@ -108,6 +116,13 @@ class AbcViewer(QMainWindow):
         self.tune_add_to_new_book.triggered.connect(self._add_tune_to_new_tunebook)
 
         self.tune_menu.addAction(self.tune_add_to_new_book)
+
+        self.tune_edit = QAction("&Edit the current tune", self)
+        self.tune_edit.setShortcut("Ctrl+E")
+        self.tune_edit.setStatusTip("Edit and preview the tune in the editor")
+        self.tune_edit.triggered.connect(self._edit_tune)
+
+        self.tune_menu.addAction(self.tune_edit)
 
 
     def _fit_width(self, *args, **kwargs):
@@ -142,6 +157,15 @@ class AbcViewer(QMainWindow):
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
 
+    def _save_tunebook(self, *args, **kwargs):
+        self._save()
+        
+    def _save(self, filename=None):
+        if not filename:
+            filename = self.abc_file.filename
+        print(filename)
+        self.abc_file.write(filename)
+
     def _on_index_change(self, current, previous):
         # try to delete the last temp SVG file
         if self.tmp_svg:
@@ -150,8 +174,9 @@ class AbcViewer(QMainWindow):
             except:
                 pass # oh well
 
-        self._current_tune = current.tune
-        self.display_current_tune()
+        if current:
+            self._current_tune = current.tune
+            self.display_current_tune()
 
     def display_current_tune(self):
         #export the selected tune as an SVG and display it
@@ -189,7 +214,6 @@ class AbcViewer(QMainWindow):
                                                 max=12)
 
         if accept:
-            self._current_tune = self._current_tune.copy()
             self._current_tune.transpose(steps)
             self.display_current_tune()
 
@@ -219,6 +243,12 @@ class AbcViewer(QMainWindow):
             out_tb = AbcTunebook()
             out_tb.append(self._current_tune)
             out_tb.write(filename)
+
+    def _edit_tune(self, *args, **kwargs):
+        tune, accepted = edit_tune(self._current_tune.copy())
+        if accepted:
+            self._current_tune.update_from_abc(tune.content)
+            self.display_current_tune()
 
     def resizeEvent(self, *args, **kwargs):
         """resize the ABC display to match the new window size"""

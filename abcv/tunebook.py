@@ -4,6 +4,32 @@ import tempfile
 from copy import deepcopy
 from subprocess import check_output
 
+def tune_from_abc(abc):
+    lines = abc.split("\n")
+    tune = AbcTune(0)
+    tune.content = abc.strip()
+    
+    for line in lines:
+        line = line.strip()
+        
+        if len(line) > 1 and line[1] == ":": # it's a data field
+            key, value = line[0], line[2:].strip()
+            
+            if key == "X":
+                print(line)
+                tune.xref = int(value)
+            elif key == "T":
+                if tune.title == "":
+                    tune.title = value
+
+            try:
+                tune[key].append(value)
+            except KeyError:
+                tune[key] = [value,]
+
+    return tune
+                
+
 class AbcTune(dict):
     """Represents a single tune from an ABC tunebook; a dict whose
 contents are the top-level properties of the tune.  Also has:
@@ -45,12 +71,24 @@ original unchanged."""
         """Transpose the tune to a new key"""
         self._replace_with_abc2abc_output(["-e",  "-t", str(semitones)])
 
+    def update_from_abc(self, abc):
+        other = tune_from_abc(abc)
+        self.clear()
+        self.title = other.title
+        self.xref = other.xref
+        self.content = other.content
+        for k in other.keys():
+            self[k] = other[k]
+
+
+
     def _replace_with_abc2abc_output(self, abc2abc_args):
         with tempfile.NamedTemporaryFile() as f:
             f.write(bytes(self.content, "utf-8"))
             f.flush()
             
-            self.content = check_output(["abc2abc", f.name] + abc2abc_args).decode("utf-8")
+            self.update_from_abc(
+                check_output(["abc2abc", f.name] + abc2abc_args).decode("utf-8"))
         
 
 # order of encodings to try when opening files, ordered by prevalence
@@ -89,7 +127,7 @@ filename and a method to return a sorted list of titles"""
         # try to load the file with each encoding from _encodings in turn
         try:
             with codecs.open(self.filename, "r", encoding) as f:
-                lines = f.readlines()
+                abc = f.read()
         except UnicodeDecodeError:
             try:
                 next_encoding = _encodings[_encodings.index(encoding) + 1]
@@ -99,39 +137,23 @@ filename and a method to return a sorted list of titles"""
             self._load(next_encoding)
             return None
 
-        
-        for line in lines:
-            # ignore blank lines
-            if line.strip() == "":
-                pass
-            # save the tune and start a new one for each xref number
-            elif line.strip().startswith("X:"):
-                # tune is None if you haven't started one before
-                if tune:
-                    list.append(self, tune)
-                tune = AbcTune(int(line.replace("X:", "").strip()))
-            # T: is the title; store the first and ignore the rest
-            elif line.strip().startswith("T:"):
-                if tune.title == "":
-                    tune.title = line.replace("T:", "").strip()
-            # anything of the pattern ?: ... is a top-level property,
-            # at least for our inexact purposes
-            elif len(line.strip()) > 1 and line.strip()[1] == ":":
-                try:
-                    tune[line.strip()[0]].append(line.strip()[2:].strip())
-                except KeyError:
-                    tune[line.strip()[0]] = [line.strip()[2:].strip()]
-                except:
-                    pass
+        def maybe_add_xref_tag(tune):
+            if tune.startswith("X:"):
+                return tune
+            else:
+                return "X:" + tune
+            
+        tunes = [tune for tune in map(tune_from_abc,
+                                      [maybe_add_xref_tag(tune)
+                                       for tune in abc.split("\nX:")
+                                       if tune.strip()])]
 
-            # if there's a tune, and the line isn't blank, add it to
-            # the tune (there's no tune until we reach the first X:
-            if tune != None and line.strip() != "":
-                tune.content += line
+        # trim off extraneous matter before first tune
+        if not abc.strip().startswith("X:"):
+            tunes = tunes[1:]
 
-        # there's probably one last tune to add
-        if tune:
-            list.append(self, tune)
+        for tune in tunes:
+            self.append(tune)
 
     def titles(self):
         """Return a sorted list of tune titles"""
