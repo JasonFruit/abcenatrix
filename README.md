@@ -17,7 +17,8 @@ Capabilities:
  - Displays tunes
  - Prints tunes
  - Transposes tunes
- - Creates and manages tunebooks
+ - Allows editing tunes with live preview
+ - Creates, manages, and saves tunebooks
  
 Future plans:
 ----------------------------------------------------------------------
