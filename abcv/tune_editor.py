@@ -90,7 +90,7 @@ class AbcTuneEditor(QDialog):
         self.svg.visible_width, self.svg.visible_height = self.scroll_area.size().toTuple()
         self.redraw_tune()
         
-def edit_tune(tune, parent=None):
+def edit_tune(tune=None, parent=None):
     dlg = AbcTuneEditor(tune, parent=parent)
     accepted = dlg.exec_()
     return (dlg.tune, accepted)

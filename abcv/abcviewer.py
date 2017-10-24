@@ -105,6 +105,13 @@ class AbcViewer(QMainWindow):
 
         self.tune_menu.addAction(self.tune_edit)
 
+        self.tune_new_tune = QAction("&New tune", self)
+        self.tune_new_tune.setShortcut("Ctrl+N")
+        self.tune_new_tune.setStatusTip("Edit a new tune with live preview")
+        self.tune_new_tune.triggered.connect(self._new_tune)
+
+        self.tune_menu.addAction(self.tune_new_tune)
+
         self.tune_add_to_menu = self.tune_menu.addMenu("&Add to:")
         
         self.tune_add_to_book = QAction("E&xisting tunebook…", self)
@@ -260,6 +267,15 @@ class AbcViewer(QMainWindow):
         tune, accepted = edit_tune(self._current_tune.copy())
         if accepted:
             self._current_tune.update_from_abc(tune.content)
+            self.display_current_tune()
+
+    def _new_tune(self, *args, **kwargs):
+        tune, accepted = edit_tune()
+        if accepted:
+            self.abc_file.append(tune)
+            item = TuneListItem(tune)
+            self.title_list.addItem(item)
+            self.title_list.setCurrentItem(item)
             self.display_current_tune()
 
     def resizeEvent(self, *args, **kwargs):
