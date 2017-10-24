@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "abcviewer",
-    version = "0.2.3",
+    version = "0.2.7",
     author = "Jason R. Fruit",
     author_email = "jasonfruit@gmail.com",
     description = "A viewer for tunebooks in ABC musical notation.",
@@ -18,6 +18,8 @@ setup(
     keywords = "ABC music viewer",
     url = "http://jasonfruit.com/abcviewer.html",
     scripts=["abcviewer",],
+    data_files=[("/usr/share/applications", ["abcviewer.desktop"]),
+                ("/usr/share/pixmaps", ["abcviewer.png"])],
     packages=['abcv',],
     long_description=read('README.md'),
     classifiers=[

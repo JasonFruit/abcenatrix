@@ -17,7 +17,7 @@ class AbcViewer(QMainWindow):
     def __init__(self, filename=None):
         QMainWindow.__init__(self)
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),
-                                              "main.png")))
+                                              "/usr/share/pixmaps/abcviewer.png")))
                                         
         self._current_tune = None
         self._setUpMenus()
