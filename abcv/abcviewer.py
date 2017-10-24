@@ -65,25 +65,18 @@ class AbcViewer(QMainWindow):
         self.view_menu = self.menuBar().addMenu("Vie&w")
         self.tune_menu = self.menuBar().addMenu("&Tune")
         
-        # open and print go in the file menu
+        # open and save go in the file menu
         self.file_open = QAction("&Open", self)
         self.file_open.setShortcut("Ctrl+O")
         self.file_open.setStatusTip("Open a tunebook")
         self.file_open.triggered.connect(self._prompt_load)
 
-        # save and print go in the file menu
         self.file_save = QAction("&Save", self)
         self.file_save.setShortcut("Ctrl+S")
         self.file_save.setStatusTip("Save the tunebook")
         self.file_save.triggered.connect(self._save_tunebook)
 
-        self.file_print = QAction("&Print", self)
-        self.file_print.setShortcut("Ctrl+P")
-        self.file_print.setStatusTip("Print a tune")
-        self.file_print.triggered.connect(self._print)
-
         self.file_menu.addAction(self.file_open)
-        self.file_menu.addAction(self.file_print)
         self.file_menu.addAction(self.file_save)
 
         # fit choices go in a Fit submenu of the view menu
@@ -100,29 +93,40 @@ class AbcViewer(QMainWindow):
         self.view_fit_menu.addAction(self.view_fit_height)
         self.view_fit_menu.addAction(self.view_fit_all)
 
-        self.tune_transpose = QAction("Transpose", self)
+        self.tune_transpose = QAction("Tra&nspose…", self)
         self.tune_transpose.triggered.connect(self._transpose)
 
         self.tune_menu.addAction(self.tune_transpose)
 
-        self.tune_add_to_book = QAction("&Copy to existing tunebook", self)
-        self.tune_add_to_book.setStatusTip("Copy tune to an existing ABC file")
-        self.tune_add_to_book.triggered.connect(self._add_tune_to_tunebook)
-
-        self.tune_menu.addAction(self.tune_add_to_book)
-
-        self.tune_add_to_new_book = QAction("&Add to new tunebook", self)
-        self.tune_add_to_new_book.setStatusTip("Create a new ABC file with only this tune")
-        self.tune_add_to_new_book.triggered.connect(self._add_tune_to_new_tunebook)
-
-        self.tune_menu.addAction(self.tune_add_to_new_book)
-
         self.tune_edit = QAction("&Edit the current tune", self)
         self.tune_edit.setShortcut("Ctrl+E")
-        self.tune_edit.setStatusTip("Edit and preview the tune in the editor")
+        self.tune_edit.setStatusTip("Edit the tune with live preview")
         self.tune_edit.triggered.connect(self._edit_tune)
 
         self.tune_menu.addAction(self.tune_edit)
+
+        self.tune_add_to_menu = self.tune_menu.addMenu("&Add to:")
+        
+        self.tune_add_to_book = QAction("E&xisting tunebook…", self)
+        self.tune_add_to_book.setStatusTip("Copy tune to an existing ABC file")
+        self.tune_add_to_book.triggered.connect(self._add_tune_to_tunebook)
+
+        self.tune_add_to_menu.addAction(self.tune_add_to_book)
+
+        self.tune_add_to_new_book = QAction("&New tunebook…", self)
+        self.tune_add_to_new_book.setStatusTip("Create a new ABC file with only this tune")
+        self.tune_add_to_new_book.triggered.connect(self._add_tune_to_new_tunebook)
+
+        self.tune_add_to_menu.addAction(self.tune_add_to_new_book)
+
+        self.tune_print = QAction("&Print", self)
+        self.tune_print.setShortcut("Ctrl+P")
+        self.tune_print.setStatusTip("Print a tune")
+        self.tune_print.triggered.connect(self._print)
+
+        self.tune_menu.addAction(self.tune_print)
+
+
 
 
     def _fit_width(self, *args, **kwargs):
