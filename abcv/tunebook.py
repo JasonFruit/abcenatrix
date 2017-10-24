@@ -16,8 +16,10 @@ def tune_from_abc(abc):
             key, value = line[0], line[2:].strip()
             
             if key == "X":
-                print(line)
-                tune.xref = int(value)
+                try:
+                    tune.xref = int(value)
+                except ValueError:
+                    tune.xref = None
             elif key == "T":
                 if tune.title == "":
                     tune.title = value
@@ -181,3 +183,6 @@ filename and a method to return a sorted list of titles"""
         """Add a tune to the tunebook"""
         list.append(self, tune)
         self.renumber() # redo xref numbering to keep unique
+
+if __name__ == "__main__":
+    book = AbcTunebook("/home/jason/library/music/other/colonial.abc")

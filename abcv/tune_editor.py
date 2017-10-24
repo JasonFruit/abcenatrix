@@ -16,6 +16,8 @@ C4"""
 class AbcTuneEditor(QDialog):
     def __init__(self, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
+        self.setMinimumSize(QSize(800, 600))
+        self.setModal(True)
 
         if not tune:
             tune = tune_from_abc(tune_template)

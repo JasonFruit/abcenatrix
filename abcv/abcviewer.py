@@ -139,9 +139,14 @@ class AbcViewer(QMainWindow):
         
     def _prompt_load(self):
         """Prompt for a file to load"""
+        try:
+            dirname = self.lastdir
+        except:
+            dirname = os.environ["HOME"]
+            
         filename, accept = QFileDialog.getOpenFileName(self,
                                                        "Open Tunebook",
-                                                       os.environ["HOME"],
+                                                       dirname,    
                                                        "ABC tunebooks (*.abc *.abc.txt)")
 
         if accept:
@@ -149,6 +154,9 @@ class AbcViewer(QMainWindow):
 
     def _load(self, filename):
         """Load a new ABC file"""
+
+        self.lastdir = os.path.dirname(filename)
+            
         self.abc_file = AbcTunebook(filename)
         self.setWindowTitle(self.abc_file.filename)
 
