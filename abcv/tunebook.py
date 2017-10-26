@@ -184,5 +184,10 @@ filename and a method to return a sorted list of titles"""
         list.append(self, tune)
         self.renumber() # redo xref numbering to keep unique
 
+    def remove(self, tune):
+        """Delete a tune from the tunebook"""
+        list.remove(self, tune)
+        self.renumber()
+
 if __name__ == "__main__":
     book = AbcTunebook("/home/jason/library/music/other/colonial.abc")

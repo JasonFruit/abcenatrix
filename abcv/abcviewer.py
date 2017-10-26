@@ -112,6 +112,13 @@ class AbcViewer(QMainWindow):
 
         self.tune_menu.addAction(self.tune_new_tune)
 
+        self.tune_delete_tune = QAction("&Delete tune", self)
+        self.tune_delete_tune.setShortcut("Ctrl+D")
+        self.tune_delete_tune.setStatusTip("Delete selected tune")
+        self.tune_delete_tune.triggered.connect(self._delete_tune)
+
+        self.tune_menu.addAction(self.tune_delete_tune)
+
         self.tune_add_to_menu = self.tune_menu.addMenu("&Add to:")
         
         self.tune_add_to_book = QAction("E&xisting tunebook…", self)
@@ -269,6 +276,16 @@ class AbcViewer(QMainWindow):
             self._current_tune.update_from_abc(tune.content)
             self.display_current_tune()
 
+    def _delete_tune(self, *args, **kwargs):
+
+        if self._confirm("", "Really delete %s?" % self._current_tune.title):
+            self.abc_file.remove(self._current_tune)
+
+            self.title_list.clear()
+
+            for tune in self.abc_file:
+                self.title_list.addItem(TuneListItem(tune))
+
     def _new_tune(self, *args, **kwargs):
         tune, accepted = edit_tune()
         if accepted:
@@ -277,6 +294,15 @@ class AbcViewer(QMainWindow):
             self.title_list.addItem(item)
             self.title_list.setCurrentItem(item)
             self.display_current_tune()
+
+    def _confirm(self, title, message):
+        msgBox = QMessageBox(self)
+        msgBox.setText(title)
+        msgBox.setInformativeText(message)
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Ok)
+        return msgBox.exec_() == QMessageBox.Ok
+        
 
     def resizeEvent(self, *args, **kwargs):
         """resize the ABC display to match the new window size"""
