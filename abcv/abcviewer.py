@@ -1,7 +1,7 @@
 import os, sys
 import codecs
 from uuid import uuid4
-from abcv.tunebook import AbcTune, AbcTunebook
+from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.tune_editor import edit_tune
 
@@ -12,6 +12,17 @@ class TuneListItem(QListWidgetItem):
     def __init__(self, tune):
         QListWidgetItem.__init__(self, tune.title)
         self.tune = tune
+
+def show_tune_info(tune, parent=None):
+    message = []
+    defined = information_fields.keys()
+    for k in tune.keys():
+        if k in defined:
+            message.append("%s: %s" % (information_fields[k],
+                                       "\n".join(tune[k])))
+    dlg = QMessageBox(parent)
+    dlg.setText("\n".join(message))
+    return dlg.exec_()
 
 class AbcViewer(QMainWindow):
     def __init__(self, filename=None):
@@ -139,6 +150,13 @@ class AbcViewer(QMainWindow):
         self.tune_print.triggered.connect(self._print)
 
         self.tune_menu.addAction(self.tune_print)
+
+        self.tune_info = QAction("&Info", self)
+        self.tune_info.setShortcut("Ctrl+I")
+        self.tune_info.setStatusTip("Info on the selected tune")
+        self.tune_info.triggered.connect(self._tune_info)
+
+        self.tune_menu.addAction(self.tune_info)
 
 
 
@@ -302,6 +320,10 @@ class AbcViewer(QMainWindow):
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Ok)
         return msgBox.exec_() == QMessageBox.Ok
+
+    def _tune_info(self):
+        tune = self._current_tune
+        show_tune_info(tune, self)
         
 
     def resizeEvent(self, *args, **kwargs):

@@ -4,6 +4,23 @@ import tempfile
 from copy import deepcopy
 from subprocess import check_output
 
+information_fields = {
+    "X": "Reference number",
+    "T": "Tune title",
+    "C": "Composer",
+    "O": "Origin",
+    "A": "Author of lyrics",
+    "M": "Meter",
+    "L": "Unit note length",
+    "Q": "Tempo",
+    "P": "Parts",
+    "Z": "Transcriber",
+    "N": "Notes",
+    "G": "Group",
+    "H": "History",
+    "K": "Key"}
+    
+
 def tune_from_abc(abc):
     lines = abc.split("\n")
     tune = AbcTune(0)
