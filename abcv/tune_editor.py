@@ -1,26 +1,34 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-import os
+import os, pwd
 from abcv.tunebook import AbcTune, AbcTunebook, tune_from_abc
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from uuid import uuid4
+
+user_full_name = pwd.getpwuid(os.getuid()).pw_gecos.strip(", ")
 
 tune_template = """X:0
 T:Title
 M:4/4
 L:1/8
-Z:""" + os.environ["USER"] + """
+Z: %s <%s>
 K:C
 C4"""
 
+
 class AbcTuneEditor(QDialog):
-    def __init__(self, tune=None, parent=None):
+    def __init__(self, settings, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
         self.setMinimumSize(QSize(800, 600))
         self.setModal(True)
 
+        self.settings = settings
+
+        self.tune_template = tune_template % (self.settings.get("User name"),
+                                              self.settings.get("User email"))
+
         if not tune:
-            tune = tune_from_abc(tune_template)
+            tune = tune_from_abc(self.tune_template)
             
         self._tune = tune
         self.vbox = QVBoxLayout()
@@ -90,10 +98,6 @@ class AbcTuneEditor(QDialog):
         self.svg.visible_width, self.svg.visible_height = self.scroll_area.size().toTuple()
         self.redraw_tune()
         
-def edit_tune(tune=None, parent=None):
-    dlg = AbcTuneEditor(tune, parent=parent)
-    accepted = dlg.exec_()
-    return (dlg.tune, accepted)
 
 if __name__ == "__main__":
     import sys

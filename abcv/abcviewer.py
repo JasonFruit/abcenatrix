@@ -3,7 +3,7 @@ import codecs
 from uuid import uuid4
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
-from abcv.tune_editor import edit_tune
+from abcv.tune_editor import AbcTuneEditor
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -16,20 +16,24 @@ class TuneListItem(QListWidgetItem):
 def show_tune_info(tune, parent=None):
     message = []
     defined = information_fields.keys()
+    
     for k in tune.keys():
         if k in defined:
             message.append("%s: %s" % (information_fields[k],
                                        "\n".join(tune[k])))
+            
     dlg = QMessageBox(parent)
     dlg.setText("\n".join(message))
+    
     return dlg.exec_()
 
 class AbcViewer(QMainWindow):
-    def __init__(self, filename=None):
+    def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),
                                               "/usr/share/pixmaps/abcviewer.png")))
-                                        
+
+        self.settings = settings
         self._current_tune = None
         self._setUpMenus()
 
@@ -50,11 +54,21 @@ class AbcViewer(QMainWindow):
         # get the width and height of the window
         width, height = self.size().toTuple()
 
+        if self.settings.get("Default fit") == "width":
+            fit = fits.FIT_WIDTH
+        elif self.settings.get("Default fit") == "all":
+            fit = fits.FIT_ALL
+        elif self.settings.get("Default fit") == "height":
+            fit = fits.FIT_HEIGHT
+        else:
+            # the default default, I guess
+            fit = fits.FIT_ALL
+            
         # the tune is in an SVG display widget that changes height
         # based on fit parameters
         self.abc_display = ScrollableSvgWidget(height,
                                                width,
-                                               fit_style=fits.FIT_ALL)
+                                               fit_style=fit)
 
         # the scroll widget to contain the SVG tune
         self.scroll_area = QScrollArea()
@@ -164,21 +178,21 @@ class AbcViewer(QMainWindow):
     def _fit_width(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_WIDTH
         self.abc_display.repaint()
+        self.settings.set("Default fit", "width")
 
     def _fit_height(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_HEIGHT
         self.abc_display.repaint()
+        self.settings.set("Default fit", "height")
 
     def _fit_all(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_ALL
         self.abc_display.repaint()
+        self.settings.set("Default fit", "all")
         
     def _prompt_load(self):
         """Prompt for a file to load"""
-        try:
-            dirname = self.lastdir
-        except:
-            dirname = os.environ["HOME"]
+        dirname = self.settings.get("Open directory")
             
         filename, accept = QFileDialog.getOpenFileName(self,
                                                        "Open Tunebook",
@@ -191,7 +205,7 @@ class AbcViewer(QMainWindow):
     def _load(self, filename):
         """Load a new ABC file"""
 
-        self.lastdir = os.path.dirname(filename)
+        self.settings.set("Open directory", os.path.dirname(filename))
             
         self.abc_file = AbcTunebook(filename)
         self.setWindowTitle(self.abc_file.filename)
@@ -274,24 +288,28 @@ class AbcViewer(QMainWindow):
 
     def _add_tune_to_new_tunebook(self, *args, **kwargs):
         """Prompt for a tunebook file to add tune to"""
-        filename, accept = QFileDialog.getSaveFileName(self,
-                                                       "Create New Tunebook",
-                                                       os.path.join(os.environ["HOME"],
-                                                                    "new.abc"),
-                                                       "ABC tunebooks (*.abc *.abc.txt)")
+        filename, accept = QFileDialog.getSaveFileName(
+            self,
+            "Create New Tunebook",
+            os.path.join(self.settings.get("Save directory"),
+                         "new.abc"),
+            "ABC tunebooks (*.abc *.abc.txt)")
 
         if accept:
             if not filename.endswith(".abc"):
                 filename = filename + ".abc"
-                
+
+            self.settings.set("Save directory", os.path.dirname(filename))
+            
             out_tb = AbcTunebook()
             out_tb.append(self._current_tune)
             out_tb.write(filename)
 
     def _edit_tune(self, *args, **kwargs):
-        tune, accepted = edit_tune(self._current_tune.copy())
+        dlg = AbcTuneEditor(self.settings, self._current_tune, parent=self)
+        accepted = dlg.exec_()
         if accepted:
-            self._current_tune.update_from_abc(tune.content)
+            self._current_tune.update_from_abc(dlg.tune.content)
             self.display_current_tune()
 
     def _delete_tune(self, *args, **kwargs):
@@ -305,8 +323,10 @@ class AbcViewer(QMainWindow):
                 self.title_list.addItem(TuneListItem(tune))
 
     def _new_tune(self, *args, **kwargs):
-        tune, accepted = edit_tune()
+        dlg = AbcTuneEditor(self.settings, parent=self)
+        accepted = dlg.exec_()
         if accepted:
+            tune = dlg.tune
             self.abc_file.append(tune)
             item = TuneListItem(tune)
             self.title_list.addItem(item)
