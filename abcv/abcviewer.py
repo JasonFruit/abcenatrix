@@ -4,6 +4,7 @@ from uuid import uuid4
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.tune_editor import AbcTuneEditor
+from abcv.midiplayer import MidiPlayer
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -33,6 +34,8 @@ class AbcViewer(QMainWindow):
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),
                                               "/usr/share/pixmaps/abcviewer.png")))
 
+        self.midi = MidiPlayer()
+        
         self.settings = settings
         self._current_tune = None
         self._setUpMenus()
@@ -83,12 +86,13 @@ class AbcViewer(QMainWindow):
         # if a filename was passed in, load it
         if filename:
             self._load(filename)
-            
+
     def _setUpMenus(self):
         # top-level menus
         self.file_menu = self.menuBar().addMenu("Tune&book")
         self.view_menu = self.menuBar().addMenu("Vie&w")
         self.tune_menu = self.menuBar().addMenu("&Tune")
+        self.playback_menu = self.menuBar().addMenu("&Playback")
         
         # open and save go in the file menu
         self.file_open = QAction("&Open", self)
@@ -172,7 +176,19 @@ class AbcViewer(QMainWindow):
 
         self.tune_menu.addAction(self.tune_info)
 
+        self.playback_start = QAction("&Start/Stop", self)
+        self.playback_start.setShortcut(QKeySequence(Qt.Key.Key_Space))
+        self.playback_start.setStatusTip("Play/stop the selected tune")
+        self.playback_start.triggered.connect(self._playback_start)
 
+        self.playback_menu.addAction(self.playback_start)
+
+        self.playback_restart = QAction("&Jump to start", self)
+        self.playback_restart.setShortcut("Ctrl+J")
+        self.playback_restart.setStatusTip("Restart the selected tune")
+        self.playback_restart.triggered.connect(self._playback_restart)
+
+        self.playback_menu.addAction(self.playback_restart)
 
 
     def _fit_width(self, *args, **kwargs):
@@ -215,6 +231,8 @@ class AbcViewer(QMainWindow):
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
 
+        
+
     def _save_tunebook(self, *args, **kwargs):
         self._save()
         
@@ -239,9 +257,15 @@ class AbcViewer(QMainWindow):
     def display_current_tune(self):
         #export the selected tune as an SVG and display it
         self.tmp_svg = "/tmp/%s.svg" % uuid4()
+        self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
         self._current_tune.write_svg(self.tmp_svg)
+        self._current_tune.write_midi(self.tmp_midi)
         self.abc_display.load(self.tmp_svg)
-
+        if self.midi.playing:
+            self.midi.stop()
+            
+        self.midi.load(self.tmp_midi)
+        
     def _print(self, *args, **kwargs):
         # save the fit for display and change to fit the whole page,
         # which is okay for most printers
@@ -350,3 +374,18 @@ class AbcViewer(QMainWindow):
         """resize the ABC display to match the new window size"""
         self.abc_display.visible_width, self.abc_display.visible_height = self.scroll_area.size().toTuple()
 
+    def _playback_start(self, *args, **kwargs):
+        if self.midi.playing:
+            if self.paused:
+                self.midi.unpause()
+                self.paused = False
+            else:
+                self.midi.pause()
+                self.paused = True
+        else:
+            self.midi.play()
+            self.paused = False
+
+    def _playback_restart(self, *args, **kwargs):
+        self.midi.stop()
+        self.paused = False

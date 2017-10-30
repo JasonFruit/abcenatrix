@@ -6,7 +6,8 @@ Requirements:
 
  - Python 3.x
  - PySide
- - abcm2ps
+ - abcm2ps and abc2midi
+ - pygame
  - Linux (I'll work on portability now that it's basically working)
  
 Capabilities:
@@ -19,6 +20,7 @@ Capabilities:
  - Transposes tunes
  - Allows editing tunes with live preview
  - Creates, manages, and saves tunebooks
+ - Plays tunes
  
 Future plans:
 ----------------------------------------------------------------------
@@ -26,4 +28,3 @@ Future plans:
 In the future I plan to make this:
 
  - portable to inferior operating systems
- - able to play tunes

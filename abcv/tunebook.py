@@ -80,6 +80,18 @@ filename"""
             # move the whatnot001.svg file to whatnot.svg
             os.system(
                 "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
+
+    def write_midi(self, filename):
+        """Write MIDI of the tune to the specified filename"""
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(bytes(self.content, "utf-8"))
+            f.flush()
+
+            # convert to MIDI
+            os.system(
+                "abc2midi %(tmpfile)s -o %(filename)s" %
+                {"filename": filename,
+                 "tmpfile": f.name})
             
     def copy(self):
         """Return a deep copy of the tune; e.g. for modification, leaving the
