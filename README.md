@@ -4,23 +4,16 @@ ABC Viewer: A Python/QT viewer for ABC tunebooks
 Requirements:
 ----------------------------------------------------------------------
 
- - Python 3.x
- - PySide
+ - Python 3.x with PySide, pygame, and mido
  - abcm2ps and abc2midi
- - pygame
  - Linux (I'll work on portability now that it's basically working)
  
 Capabilities:
 ----------------------------------------------------------------------
 
- - Opens tunebooks
- - Lists tunes by title
- - Displays tunes
- - Prints tunes
- - Transposes tunes
- - Allows editing tunes with live preview
- - Creates, manages, and saves tunebooks
- - Plays tunes
+ - Opens, creates, manages, and saves tunebooks
+ - Displays, prints, transposes, and plays tunes
+ - Edits tunes with live preview
  
 Future plans:
 ----------------------------------------------------------------------
