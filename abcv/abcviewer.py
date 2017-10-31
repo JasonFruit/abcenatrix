@@ -49,10 +49,25 @@ class AbcViewer(QMainWindow):
         # display on the right
         self.tunebook_hbox = QHBoxLayout()
         self.central_widget.setLayout(self.tunebook_hbox)
-        
+
+        self.title_vbox = QVBoxLayout()
+
+        self.title_control_hbox = QHBoxLayout()
+
+        self.title_filter_btn = QPushButton("&Filter")
+        self.filter_menu = self._set_up_filter_menu()
+        self.title_filter_btn.setMenu(self.filter_menu)
+
+        self.title_control_hbox.addWidget(self.title_filter_btn, stretch=0)
+
+        self.title_vbox.addLayout(self.title_control_hbox, stretch=0)
+
         self.title_list = QListWidget()
         self.title_list.currentItemChanged.connect(self._on_index_change)
-        self.tunebook_hbox.addWidget(self.title_list, stretch=0) # fixed width
+        
+        self.title_vbox.addWidget(self.title_list, stretch=1)
+        
+        self.tunebook_hbox.addLayout(self.title_vbox, stretch=0) # fixed width
 
         # get the width and height of the window
         width, height = self.size().toTuple()
@@ -190,6 +205,22 @@ class AbcViewer(QMainWindow):
 
         self.playback_menu.addAction(self.playback_restart)
 
+    def _set_up_filter_menu(self):
+        menu = QMenu("&Filter", self)
+
+        self.apply_filter = QAction("&Apply filter…", self)
+        self.apply_filter.setStatusTip("Create and apply a filter")
+        self.apply_filter.triggered.connect(self._apply_filter)
+
+        menu.addAction(self.apply_filter)
+        
+        self.clear_filter = QAction("&Clear filter", self)
+        self.clear_filter.setStatusTip("Clear filter")
+        self.clear_filter.triggered.connect(self._clear_filter)
+
+        menu.addAction(self.clear_filter)
+
+        return menu
 
     def _fit_width(self, *args, **kwargs):
         self.abc_display.fit_style = fits.FIT_WIDTH
@@ -389,3 +420,22 @@ class AbcViewer(QMainWindow):
     def _playback_restart(self, *args, **kwargs):
         self.midi.stop()
         self.paused = False
+
+    def _apply_filter(self, *args, **kwargs):
+        filter_text, accepted = QInputDialog.getText(self,
+                                                     "Apply Filter",
+                                                     "Show tunes containing:")
+        
+        if accepted:
+            for i in range(self.title_list.count()):
+                item = self.title_list.item(i)
+                if filter_text.lower() in item.tune.content.lower():
+                    item.setHidden(False)
+                else:
+                    item.setHidden(True)
+                    
+
+    def _clear_filter(self, *args, **kwargs):
+        for i in range(self.title_list.count()):
+            item = self.title_list.item(i)
+            item.setHidden(False)
