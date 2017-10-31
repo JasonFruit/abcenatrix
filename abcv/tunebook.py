@@ -184,10 +184,10 @@ filename and a method to return a sorted list of titles"""
             tunes = tunes[1:]
 
         for tune in tunes:
-            self.append(tune)
+            list.append(self, tune)
 
     def titles(self):
-        """Return a sorted list of tune titles"""
+        """Return a list of tune titles"""
         return [tune.title for tune in self]
 
     def renumber(self):

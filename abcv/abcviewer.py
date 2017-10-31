@@ -222,15 +222,15 @@ class AbcViewer(QMainWindow):
         """Load a new ABC file"""
 
         self.settings.set("Open directory", os.path.dirname(filename))
-            
+
         self.abc_file = AbcTunebook(filename)
+        
         self.setWindowTitle(self.abc_file.filename)
 
         self.title_list.clear()
-        
+
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
-
         
 
     def _save_tunebook(self, *args, **kwargs):
