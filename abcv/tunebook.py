@@ -14,6 +14,7 @@ information_fields = {
     "L": "Unit note length",
     "Q": "Tempo",
     "P": "Parts",
+    "R": "Rhythm",
     "Z": "Transcriber",
     "N": "Notes",
     "G": "Group",

@@ -5,6 +5,7 @@ from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
+from abcv.filter_dialog import FilterDialog
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -422,17 +423,20 @@ class AbcViewer(QMainWindow):
         self.paused = False
 
     def _apply_filter(self, *args, **kwargs):
-        filter_text, accepted = QInputDialog.getText(self,
-                                                     "Apply Filter",
-                                                     "Show tunes containing:")
-        
+        dlg = FilterDialog(self)
+        accepted = dlg.exec_()
         if accepted:
-            for i in range(self.title_list.count()):
-                item = self.title_list.item(i)
-                if filter_text.lower() in item.tune.content.lower():
-                    item.setHidden(False)
-                else:
-                    item.setHidden(True)
+
+            filter = dlg.filter
+            
+            # for i in range(self.title_list.count()):
+            #     item = self.title_list.item(i)
+            #     if filter_text.lower() in item.tune.content.lower():
+            #         item.setHidden(False)
+            #     else:
+            #         item.setHidden(True)
+
+            filter.apply(self.title_list)
                     
 
     def _clear_filter(self, *args, **kwargs):
