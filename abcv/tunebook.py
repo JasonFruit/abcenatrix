@@ -1,3 +1,7 @@
+# coding=utf-8
+
+from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
+
 import os
 import codecs
 import tempfile
@@ -68,7 +72,11 @@ filename"""
 
         # write the tune to a temp file
         with tempfile.NamedTemporaryFile() as f:
-            f.write(bytes(self.content, "utf-8"))
+            # Python 3 first, then 2
+            try:
+                f.write(bytes(self.content, "utf-8"))
+            except:
+                f.write(bytes(self.content))
             f.flush()
 
             # convert to an SVG; abcm2ps adds 001 to the base filename
@@ -85,7 +93,11 @@ filename"""
     def write_midi(self, filename):
         """Write MIDI of the tune to the specified filename"""
         with tempfile.NamedTemporaryFile() as f:
-            f.write(bytes(self.content, "utf-8"))
+            # Python 3 first, then 2            
+            try:
+                f.write(bytes(self.content, "utf-8"))
+            except:
+                f.write(bytes(self.content))
             f.flush()
 
             # convert to MIDI
@@ -116,7 +128,11 @@ original unchanged."""
 
     def _replace_with_abc2abc_output(self, abc2abc_args):
         with tempfile.NamedTemporaryFile() as f:
-            f.write(bytes(self.content, "utf-8"))
+            # Python 3 first, then 2
+            try:
+                f.write(bytes(self.content, "utf-8"))
+            except:
+                f.write(bytes(self.content))
             f.flush()
             
             self.update_from_abc(

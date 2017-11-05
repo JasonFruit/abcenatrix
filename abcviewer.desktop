@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=AbcViewer
-Comment=Viewer and editor for ABC tunebooks
-Exec=abcviewer
-Terminal=false
-Type=Application
-Categories=Audio;AudioVideo;Utility
-Icon=/usr/share/pixmaps/abcviewer.png
-StartupNotify=true

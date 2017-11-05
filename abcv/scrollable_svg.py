@@ -1,3 +1,7 @@
+# coding=utf-8
+
+from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
+
 # Import the core and GUI elements of Qt
 from PySide.QtCore import *
 from PySide.QtGui import *

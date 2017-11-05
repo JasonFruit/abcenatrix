@@ -1,25 +1,27 @@
 import os
 from setuptools import setup
+import codecs
 
 # Utility function to read the README file.  Used for the
 # long_description.  It's nice, because now 1) we have a top level
 # README file and 2) it's easier to type in the README file than to
 # put a raw string in below ...
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return codecs.open(os.path.join(os.path.dirname(__file__), fname), "r", "utf-8").read()
 
 setup(
-    name = "abcviewer",
+    name = "abcenatrix",
     version = "0.3.5",
     author = "Jason R. Fruit",
     author_email = "jasonfruit@gmail.com",
-    description = "A viewer for tunebooks in ABC musical notation.",
+    description = "A viewer, player, and editor for tunebooks in ABC musical notation.",
     license = "MIT",
-    keywords = "ABC music viewer",
-    url = "http://jasonfruit.com/abcviewer.html",
-    scripts=["abcviewer",],
-    data_files=[("/usr/share/applications", ["abcviewer.desktop"]),
-                ("/usr/share/pixmaps", ["abcviewer.png"])],
+    keywords = "ABC music viewer player editor",
+    url = "http://jasonfruit.com/abcenatrix.html",
+    scripts=["abcenatrix",],
+    data_files=[("/usr/share/applications", ["abcenatrix.desktop"]),
+                ("/usr/share/pixmaps", ["abcenatrix.png"])],
+    install_requires=["pyside", "pygame", "mido"],
     packages=['abcv',],
     long_description=read('README.md'),
     classifiers=[
