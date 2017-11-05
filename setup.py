@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "abcviewer",
-    version = "0.3.4",
+    version = "0.3.5",
     author = "Jason R. Fruit",
     author_email = "jasonfruit@gmail.com",
     description = "A viewer for tunebooks in ABC musical notation.",

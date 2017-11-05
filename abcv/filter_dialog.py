@@ -57,7 +57,7 @@ class Filter(list):
 class FilterDialog(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=parent)
-        self.setMinimumSize(QSize(800, 600))
+        self.setMinimumSize(QSize(600, 400))
         self.setModal(True)
 
         self.filter = Filter()
@@ -72,7 +72,7 @@ class FilterDialog(QDialog):
         self.vbox.addWidget(QLabel("Show only tunes where:"), stretch=0)
 
         self.filter_dsc_label = QLabel("")
-        self.filter_dsc_label.setMinimumSize(QSize(800, 400))
+        self.filter_dsc_label.setMinimumSize(QSize(600, 250))
         self.vbox.addWidget(self.filter_dsc_label, stretch=1)
 
         self.new_filter_hbox = QHBoxLayout()
