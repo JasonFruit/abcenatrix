@@ -9,6 +9,13 @@ from mido import MidiFile
 class MidiPlayer(object):
     def __init__(self):
         pygame.init()
+        
+        try:
+            pygame.mixer.init(44100, -16,2,2048)
+        except pygame.error:
+            # sound will simply fail to play
+            pass
+        
         self.mido_file = None
     def load(self, midi_fn):
         self.filename = midi_fn

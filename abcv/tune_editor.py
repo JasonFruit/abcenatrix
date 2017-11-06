@@ -4,12 +4,10 @@ from __future__ import nested_scopes, generators, division, absolute_import, wit
 
 from PySide.QtCore import *
 from PySide.QtGui import *
-import os, pwd
+import os, tempfile
 from abcv.tunebook import AbcTune, AbcTunebook, tune_from_abc
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from uuid import uuid4
-
-user_full_name = pwd.getpwuid(os.getuid()).pw_gecos.strip(", ")
 
 tune_template = """X:0
 T:Title
@@ -81,8 +79,10 @@ class AbcTuneEditor(QDialog):
                 os.unlink(self.tmp_svg)
             except:
                 pass
-                
-        self.tmp_svg = "/tmp/%s.svg" % uuid4()
+
+        tempdir = tempfile.gettempdir()
+        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
+
         self._tune.write_svg(self.tmp_svg)
 
         if os.path.exists(self.tmp_svg):

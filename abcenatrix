@@ -3,23 +3,33 @@
 
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
-import json, os, pwd, socket
+import json, os, socket
 
 from abcv.abcviewer import *
 from abcv.tunebook import *
 
-_username = pwd.getpwuid(os.getuid()).pw_gecos.strip(", ")
+# TODO: Make this right for all platforms
+if os.name == "posix":
+    import pwd
+    _username = pwd.getpwuid(os.getuid()).pw_gecos.strip(", ")
+else:
+    _username = "jason" 
 _email = _username + "@" + socket.getfqdn()
 
+if os.name == "nt":
+    homedir = os.environ["HOMEPATH"]
+else:
+    homedir = os.environ["HOME"]
+    
 _default_settings = {
     "User name": _username,
     "User email": _email,
-    "Open directory": os.environ["HOME"],
-    "Save directory": os.environ["HOME"],
+    "Open directory": homedir,
+    "Save directory": homedir,
     "Default fit": "width",
 }
 
-app_dir = os.path.join(os.environ["HOME"],
+app_dir = os.path.join(homedir,
                        ".abcenatrix")
 
 if not os.path.exists(app_dir):

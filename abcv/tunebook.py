@@ -24,7 +24,22 @@ information_fields = {
     "G": "Group",
     "H": "History",
     "K": "Key"}
-    
+
+tools_dir = os.path.abspath(os.path.join(os.path.join(os.path.dirname(__file__), ".."), "tools"))
+
+def tool_path(tool):
+    tp = os.path.join(tools_dir, tool)
+    if os.path.exists(tp):
+        return tp
+    elif os.path.exists(tp + ".exe"):
+        return tp + ".exe"
+    else:
+        return tool
+
+abc2midi = tool_path("abc2midi")
+abc2abc = tool_path("abc2abc")
+abcm2ps = tool_path("abcm2ps")
+        
 
 def tune_from_abc(abc):
     lines = abc.split("\n")
@@ -71,7 +86,9 @@ contents are the top-level properties of the tune.  Also has:
 filename"""
 
         # write the tune to a temp file
-        with tempfile.NamedTemporaryFile() as f:
+        with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
+            tmp_fn = f.name
+
             # Python 3 first, then 2
             try:
                 f.write(bytes(self.content, "utf-8"))
@@ -79,33 +96,38 @@ filename"""
                 f.write(bytes(self.content))
             f.flush()
 
-            # convert to an SVG; abcm2ps adds 001 to the base filename
-            # (and for succeeding pages, 002, 003 …)
-            os.system(
-                "abcm2ps -v -O %(filename)s %(tmpfile)s" %
-                {"filename": filename,
-                 "tmpfile": f.name})
-            
-            # move the whatnot001.svg file to whatnot.svg
-            os.system(
-                "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
+        # convert to an SVG; abcm2ps adds 001 to the base filename
+        # (and for succeeding pages, 002, 003 …)
+        os.system(
+            abcm2ps + " -v -O %(filename)s %(tmpfile)s" %
+            {"filename": filename,
+             "tmpfile": tmp_fn})
+
+        # move the whatnot001.svg file to whatnot.svg
+        os.system(
+            "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
 
     def write_midi(self, filename):
         """Write MIDI of the tune to the specified filename"""
-        with tempfile.NamedTemporaryFile() as f:
+
+        
+        with tempfile.NamedTemporaryFile(delete=False) as f:
             # Python 3 first, then 2            
             try:
                 f.write(bytes(self.content, "utf-8"))
             except:
                 f.write(bytes(self.content))
+                
+            tmp_fn = f.name
+
             f.flush()
 
-            # convert to MIDI
-            os.system(
-                "abc2midi %(tmpfile)s -o %(filename)s" %
-                {"filename": filename,
-                 "tmpfile": f.name})
-            
+        # convert to MIDI
+        os.system(
+            abc2midi + " %(tmpfile)s -o %(filename)s" %
+            {"filename": filename,
+             "tmpfile": tmp_fn})
+
     def copy(self):
         """Return a deep copy of the tune; e.g. for modification, leaving the
 original unchanged."""
@@ -136,7 +158,7 @@ original unchanged."""
             f.flush()
             
             self.update_from_abc(
-                check_output(["abc2abc", f.name] + abc2abc_args).decode("utf-8"))
+                check_output([abc2abc, f.name] + abc2abc_args).decode("utf-8"))
         
 
 # order of encodings to try when opening files, ordered by prevalence

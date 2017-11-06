@@ -2,8 +2,7 @@
 
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
-import os, sys
-import codecs
+import os, sys, tempfile, codecs
 from uuid import uuid4
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
@@ -292,8 +291,10 @@ class AbcViewer(QMainWindow):
 
     def display_current_tune(self):
         #export the selected tune as an SVG and display it
-        self.tmp_svg = "/tmp/%s.svg" % uuid4()
+        tempdir = tempfile.gettempdir()
+        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
         self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
+        
         self._current_tune.write_svg(self.tmp_svg)
         self._current_tune.write_midi(self.tmp_midi)
         self.abc_display.load(self.tmp_svg)
