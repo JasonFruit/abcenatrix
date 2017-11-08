@@ -9,6 +9,7 @@ from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
+from abcv.settings_dialog import SettingsDialog
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -112,6 +113,7 @@ class AbcViewer(QMainWindow):
         self.view_menu = self.menuBar().addMenu("Vie&w")
         self.tune_menu = self.menuBar().addMenu("&Tune")
         self.playback_menu = self.menuBar().addMenu("&Playback")
+        self.app_menu = self.menuBar().addMenu("&ABCenatrix")
         
         # open and save go in the file menu
         self.file_open = QAction("&Open", self)
@@ -208,6 +210,12 @@ class AbcViewer(QMainWindow):
         self.playback_restart.triggered.connect(self._playback_restart)
 
         self.playback_menu.addAction(self.playback_restart)
+
+        self.app_settings = QAction("Edit &Settings", self)
+        self.app_settings.setStatusTip("Edit app settings")
+        self.app_settings.triggered.connect(self._app_settings)
+
+        self.app_menu.addAction(self.app_settings)
 
     def _set_up_filter_menu(self):
         menu = QMenu("&Filter", self)
@@ -433,14 +441,6 @@ class AbcViewer(QMainWindow):
         if accepted:
 
             filter = dlg.filter
-            
-            # for i in range(self.title_list.count()):
-            #     item = self.title_list.item(i)
-            #     if filter_text.lower() in item.tune.content.lower():
-            #         item.setHidden(False)
-            #     else:
-            #         item.setHidden(True)
-
             filter.apply(self.title_list)
                     
 
@@ -448,3 +448,8 @@ class AbcViewer(QMainWindow):
         for i in range(self.title_list.count()):
             item = self.title_list.item(i)
             item.setHidden(False)
+
+    def _app_settings(self, *args, **kwargs):
+        dlg = SettingsDialog(self.settings)
+        accepted = dlg.exec_()
+        #shouldn't have to do anything

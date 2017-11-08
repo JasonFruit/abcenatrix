@@ -133,5 +133,8 @@ if __name__ == "__main__":
     accepted = app.exec_()
     if accepted:
         print(accepted, app.filter)
+        exit()
+    else:
+        exit()
     qt_app.exec_()
 

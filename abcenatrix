@@ -13,8 +13,27 @@ if os.name == "posix":
     import pwd
     _username = pwd.getpwuid(os.getuid()).pw_gecos.strip(", ")
 else:
-    _username = "jason" 
-_email = _username + "@" + socket.getfqdn()
+    import ctypes
+
+    GetUserNameEx = ctypes.windll.secur32.GetUserNameExW
+    NameDisplay = 3
+
+    size = ctypes.pointer(ctypes.c_ulong(0))
+    GetUserNameEx(NameDisplay, None, size)
+
+    nameBuffer = ctypes.create_unicode_buffer(size.contents.value)
+    GetUserNameEx(NameDisplay, nameBuffer, size)
+
+    _username =  nameBuffer.value    
+
+
+try:
+    import getpass
+    _login = getpass.getuser()
+except:
+    _login = _username
+    
+_email = _login + "@" + socket.getfqdn()
 
 if os.name == "nt":
     homedir = os.environ["HOMEPATH"]
