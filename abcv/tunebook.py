@@ -91,9 +91,9 @@ filename"""
 
             # Python 3 first, then 2
             try:
-                f.write(bytes(self.content, "utf-8"))
+                f.write(self.content.encode("utf-8"), "utf-8")
             except:
-                f.write(bytes(self.content))
+                f.write(self.content.encode("utf-8"))
             f.flush()
 
         # convert to an SVG; abcm2ps adds 001 to the base filename
@@ -114,9 +114,9 @@ filename"""
         with tempfile.NamedTemporaryFile(delete=False) as f:
             # Python 3 first, then 2            
             try:
-                f.write(bytes(self.content, "utf-8"))
+                f.write(self.content.encode("utf-8"), "utf-8")
             except:
-                f.write(bytes(self.content))
+                f.write(self.content.encode("utf-8"))
                 
             tmp_fn = f.name
 
@@ -152,9 +152,9 @@ original unchanged."""
         with tempfile.NamedTemporaryFile() as f:
             # Python 3 first, then 2
             try:
-                f.write(bytes(self.content, "utf-8"))
+                f.write(self.content.encode("utf-8"), "utf-8")
             except:
-                f.write(bytes(self.content))
+                f.write(self.content.encode("utf-8"))
             f.flush()
             
             self.update_from_abc(
