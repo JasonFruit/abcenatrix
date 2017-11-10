@@ -109,8 +109,6 @@ class FilterDialog(QDialog):
         self.vbox.addWidget(self.buttons)
 
     def _add_to_filter(self, *args, **kwargs):
-        print(self.field_list.currentText())
-        
         key = "*"
         
         for k in information_fields.keys():

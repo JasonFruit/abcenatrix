@@ -11,11 +11,11 @@ from uuid import uuid4
 
 tune_template = """X:0
 T:Title
-M:4/4
-L:1/8
+M:2/4
+L:1/16
 Z: %s <%s>
-K:C
-C4"""
+K:A
+A4"""
 
 
 class AbcTuneEditor(QDialog):

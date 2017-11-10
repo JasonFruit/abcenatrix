@@ -5,6 +5,7 @@ from __future__ import nested_scopes, generators, division, absolute_import, wit
 
 import os, sys, tempfile, codecs
 from uuid import uuid4
+import webbrowser as wb
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -15,6 +16,7 @@ from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
 from abcv.settings_dialog import SettingsDialog
+from abcv.about import about_text
 
 class TuneListItem(QListWidgetItem):
     def __init__(self, tune):
@@ -124,17 +126,13 @@ class Application(QMainWindow):
         if self._dirty:
             if self.abc_file.filename != None:
                 self.setWindowTitle("%s (modified)" % self.abc_file.filename)
-                print("%s (modified)" % self.abc_file.filename)
             else:
                 self.setWindowTitle("New tunebook (modified)")
-                print("New tunebook (modified)")
         else:
             if self.abc_file.filename != None:
                 self.setWindowTitle(self.abc_file.filename)
-                print(self.abc_file.filename)
             else:
                 self.setWindowTitle("New tunebook")
-                print("New tunebook")
                 
 
     def _setUpMenus(self):
@@ -161,9 +159,15 @@ class Application(QMainWindow):
         self.file_new.setStatusTip("Create new tunebook")
         self.file_new.triggered.connect(self._new_tunebook)
 
+        self.file_close = QAction("&Close", self)
+        self.file_close.setShortcut("Ctrl+W")
+        self.file_close.setStatusTip("Close the current tunebook")
+        self.file_close.triggered.connect(self._new_tunebook)
+
         self.file_menu.addAction(self.file_open)
         self.file_menu.addAction(self.file_save)
         self.file_menu.addAction(self.file_new)
+        self.file_menu.addAction(self.file_close)
 
         # fit choices go in a Fit submenu of the view menu
         self.view_fit_menu = self.view_menu.addMenu("Fit")
@@ -254,6 +258,20 @@ class Application(QMainWindow):
         self.app_settings.triggered.connect(self._app_settings)
 
         self.app_menu.addAction(self.app_settings)
+
+        self.app_menu.addSeparator()
+
+        self.app_about_abc = QAction("&About ABC notation", self)
+        self.app_about_abc.setStatusTip("Information about ABC notation")
+        self.app_about_abc.triggered.connect(self._about_abc)
+
+        self.app_menu.addAction(self.app_about_abc)
+
+        self.app_learn_abc = QAction("&Learn ABC notation", self)
+        self.app_learn_abc.setStatusTip("Resources for learning ABC notation")
+        self.app_learn_abc.triggered.connect(self._learn_abc)
+
+        self.app_menu.addAction(self.app_learn_abc)
 
         self.app_menu.addSeparator()
         
@@ -491,7 +509,6 @@ class Application(QMainWindow):
     def _confirm(self, title, message):
         msgBox = QMessageBox(self)
         msgBox.setWindowTitle(title)
-        msgBox.setText(title)
         msgBox.setInformativeText(message)
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Ok)
@@ -551,7 +568,14 @@ class Application(QMainWindow):
     def _app_about(self, *args, **kwargs):
         msgBox = QMessageBox(self)
         msgBox.setWindowTitle("About the ABCenatrix")
-        msgBox.setInformativeText(codecs.open("README.md", "r", "utf-8").read())
+        msgBox.setInformativeText(about_text)
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.setDefaultButton(QMessageBox.Ok)
-        return msgBox.exec_() == QMessageBox.Ok        
+        return msgBox.exec_() == QMessageBox.Ok
+
+    def _about_abc(self, *args, **kwargs):
+        wb.open("http://abcnotation.com/about#abc")
+
+    def _learn_abc(self, *args, **kwargs):
+        wb.open("http://abcnotation.com/learn")
+
