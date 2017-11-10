@@ -187,7 +187,7 @@ filename and a method to return a sorted list of titles"""
             self.filename = filename
             self._load()
         else:
-            self.filename = ""
+            self.filename = None
 
     def _load(self, encoding="utf-8"):
         """load the tunebook filename"""
@@ -246,6 +246,7 @@ filename and a method to return a sorted list of titles"""
         with codecs.open(fn, "w", "utf-8") as f:
             f.write("\n\n".join([tune.content
                                  for tune in self]))
+        self.filename = fn
             
     def append(self, tune):
         """Add a tune to the tunebook"""
@@ -256,6 +257,3 @@ filename and a method to return a sorted list of titles"""
         """Delete a tune from the tunebook"""
         list.remove(self, tune)
         self.renumber()
-
-if __name__ == "__main__":
-    book = AbcTunebook("/home/jason/library/music/other/colonial.abc")

@@ -8,7 +8,7 @@ from PySide.QtGui import *
 class SettingsDialog(QDialog):
     def __init__(self, settings=None, parent=None):
         QDialog.__init__(self, parent=parent)
-        self.setMinimumSize(QSize(600, 400))
+        self.setMinimumSize(QSize(600, 0))
         self.setModal(True)
         self.settings = settings
         self.set_up()
@@ -18,6 +18,8 @@ class SettingsDialog(QDialog):
         self.frm = QFormLayout()
         self.setLayout(self.frm)
 
+        self.frm.addRow(QLabel("Default identity (for new tunes):"))
+
         self.username_edit = QLineEdit()
         self.username_edit.setText(self.settings.get("User name"))
         self.frm.addRow("User name", self.username_edit)
@@ -26,6 +28,14 @@ class SettingsDialog(QDialog):
         self.email_edit.setText(self.settings.get("User email"))
         self.frm.addRow("Email", self.email_edit)
 
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+
+        self.frm.addRow(line)
+
+        self.frm.addRow(QLabel("Display options:"))
+        
         self.fit_list = QComboBox()
 
         fits = ["width", "height", "all"]

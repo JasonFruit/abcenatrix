@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 
+# be futuristic!  That is, basically use Python 3.
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
 import os, sys, tempfile, codecs
 from uuid import uuid4
+
+from PySide.QtCore import *
+from PySide.QtGui import *
+
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
 from abcv.settings_dialog import SettingsDialog
-
-from PySide.QtCore import *
-from PySide.QtGui import *
 
 class TuneListItem(QListWidgetItem):
     def __init__(self, tune):
@@ -33,12 +35,15 @@ def show_tune_info(tune, parent=None):
     
     return dlg.exec_()
 
-class AbcViewer(QMainWindow):
+class Application(QMainWindow):
     def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
-        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),
-                                              "/usr/share/pixmaps/abcviewer.png")))
+        self.setWindowIcon(
+            QIcon(os.path.join(os.path.dirname(__file__),
+                               "/usr/share/pixmaps/abcviewer.png")))
 
+        self._dirty = False
+        
         self.midi = MidiPlayer()
         
         self.settings = settings
@@ -106,6 +111,31 @@ class AbcViewer(QMainWindow):
         # if a filename was passed in, load it
         if filename:
             self._load(filename)
+        else:
+            self._new_tunebook()
+
+    @property
+    def dirty(self):
+        return self._dirty
+
+    @dirty.setter
+    def dirty(self, val):
+        self._dirty = val
+        if self._dirty:
+            if self.abc_file.filename != None:
+                self.setWindowTitle("%s (modified)" % self.abc_file.filename)
+                print("%s (modified)" % self.abc_file.filename)
+            else:
+                self.setWindowTitle("New tunebook (modified)")
+                print("New tunebook (modified)")
+        else:
+            if self.abc_file.filename != None:
+                self.setWindowTitle(self.abc_file.filename)
+                print(self.abc_file.filename)
+            else:
+                self.setWindowTitle("New tunebook")
+                print("New tunebook")
+                
 
     def _setUpMenus(self):
         # top-level menus
@@ -126,8 +156,14 @@ class AbcViewer(QMainWindow):
         self.file_save.setStatusTip("Save the tunebook")
         self.file_save.triggered.connect(self._save_tunebook)
 
+        self.file_new = QAction("&New", self)
+        self.file_new.setShortcut("Ctrl+Shift+N")
+        self.file_new.setStatusTip("Create new tunebook")
+        self.file_new.triggered.connect(self._new_tunebook)
+
         self.file_menu.addAction(self.file_open)
         self.file_menu.addAction(self.file_save)
+        self.file_menu.addAction(self.file_new)
 
         # fit choices go in a Fit submenu of the view menu
         self.view_fit_menu = self.view_menu.addMenu("Fit")
@@ -178,8 +214,10 @@ class AbcViewer(QMainWindow):
         self.tune_add_to_menu.addAction(self.tune_add_to_book)
 
         self.tune_add_to_new_book = QAction("&New tunebook…", self)
-        self.tune_add_to_new_book.setStatusTip("Create a new ABC file with only this tune")
-        self.tune_add_to_new_book.triggered.connect(self._add_tune_to_new_tunebook)
+        self.tune_add_to_new_book.setStatusTip(
+            "Create a new ABC file with only this tune")
+        self.tune_add_to_new_book.triggered.connect(
+            self._add_tune_to_new_tunebook)
 
         self.tune_add_to_menu.addAction(self.tune_add_to_new_book)
 
@@ -211,11 +249,19 @@ class AbcViewer(QMainWindow):
 
         self.playback_menu.addAction(self.playback_restart)
 
-        self.app_settings = QAction("Edit &Settings", self)
+        self.app_settings = QAction("&Settings…", self)
         self.app_settings.setStatusTip("Edit app settings")
         self.app_settings.triggered.connect(self._app_settings)
 
         self.app_menu.addAction(self.app_settings)
+
+        self.app_menu.addSeparator()
+        
+        self.app_about = QAction("&About the ABCenatrix", self)
+        self.app_about.setStatusTip("Information about the ABCenatrix")
+        self.app_about.triggered.connect(self._app_about)
+
+        self.app_menu.addAction(self.app_about)
 
     def _set_up_filter_menu(self):
         menu = QMenu("&Filter", self)
@@ -251,12 +297,17 @@ class AbcViewer(QMainWindow):
         
     def _prompt_load(self):
         """Prompt for a file to load"""
+
+        if not self._confirm_discard_changes():
+            return
+        
         dirname = self.settings.get("Open directory")
             
-        filename, accept = QFileDialog.getOpenFileName(self,
-                                                       "Open Tunebook",
-                                                       dirname,    
-                                                       "ABC tunebooks (*.abc *.abc.txt)")
+        filename, accept = QFileDialog.getOpenFileName(
+            self,
+            "Open Tunebook",
+            dirname,    
+            "ABC tunebooks (*.abc *.abc.txt)")
 
         if accept:
             self._load(filename)
@@ -274,16 +325,46 @@ class AbcViewer(QMainWindow):
 
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
+
+        self.dirty = False
+
+    def _new_tunebook(self, *args, **kwargs):
+        """Create a new, empty ABC tunebook"""
+        if not self._confirm_discard_changes():
+            return
+
+        self.abc_file = AbcTunebook()
+        self.title_list.clear()
+        self.dirty = False
         
 
     def _save_tunebook(self, *args, **kwargs):
         self._save()
-        
+
+
+    def _prompt_save(self):
+        """Prompt for a file to load"""
+        dirname = self.settings.get("Save directory")
+            
+        filename, accept = QFileDialog.getSaveFileName(
+            self,
+            "Save Tunebook",
+            dirname,    
+            "ABC tunebooks (*.abc *.abc.txt)")
+
+        if accept:
+            self._save(filename)
+    
     def _save(self, filename=None):
         if not filename:
-            filename = self.abc_file.filename
-        print(filename)
+            if self.abc_file.filename:
+                filename = self.abc_file.filename
+            else:
+                return self._prompt_save()
+
+        self.settings.set("Save directory", os.path.dirname(filename))
         self.abc_file.write(filename)
+        self.dirty = False
 
     def _on_index_change(self, current, previous):
         # try to delete the last temp SVG file
@@ -343,6 +424,7 @@ class AbcViewer(QMainWindow):
         if accept:
             self._current_tune.transpose(steps)
             self.display_current_tune()
+            self.dirty = True
 
     def _add_tune_to_tunebook(self, *args, **kwargs):
         """Prompt for a tunebook file to add tune to"""
@@ -380,16 +462,19 @@ class AbcViewer(QMainWindow):
         if accepted:
             self._current_tune.update_from_abc(dlg.tune.content)
             self.display_current_tune()
+            self.dirty = True
 
     def _delete_tune(self, *args, **kwargs):
 
-        if self._confirm("", "Really delete %s?" % self._current_tune.title):
+        if self._confirm("Delete Tune", "Really delete %s?" % self._current_tune.title):
             self.abc_file.remove(self._current_tune)
 
             self.title_list.clear()
 
             for tune in self.abc_file:
                 self.title_list.addItem(TuneListItem(tune))
+
+            self.dirty = True
 
     def _new_tune(self, *args, **kwargs):
         dlg = AbcTuneEditor(self.settings, parent=self)
@@ -401,14 +486,23 @@ class AbcViewer(QMainWindow):
             self.title_list.addItem(item)
             self.title_list.setCurrentItem(item)
             self.display_current_tune()
+            self.dirty = True
 
     def _confirm(self, title, message):
         msgBox = QMessageBox(self)
+        msgBox.setWindowTitle(title)
         msgBox.setText(title)
         msgBox.setInformativeText(message)
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Ok)
         return msgBox.exec_() == QMessageBox.Ok
+
+    def _confirm_discard_changes(self):
+        if self.dirty:
+            return self._confirm("Discard changes",
+                                 "You have unsaved changes.  OK to discard them?")
+        else:
+            return True
 
     def _tune_info(self):
         tune = self._current_tune
@@ -453,3 +547,11 @@ class AbcViewer(QMainWindow):
         dlg = SettingsDialog(self.settings)
         accepted = dlg.exec_()
         #shouldn't have to do anything
+
+    def _app_about(self, *args, **kwargs):
+        msgBox = QMessageBox(self)
+        msgBox.setWindowTitle("About the ABCenatrix")
+        msgBox.setInformativeText(codecs.open("README.md", "r", "utf-8").read())
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.setDefaultButton(QMessageBox.Ok)
+        return msgBox.exec_() == QMessageBox.Ok        

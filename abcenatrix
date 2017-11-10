@@ -96,9 +96,9 @@ settings = Settings()
 # start empty
 try:
     fn = sys.argv[1]
-    app = AbcViewer(settings, fn)
+    app = Application(settings, fn)
 except:
-    app = AbcViewer(settings)
+    app = Application(settings)
     
 app.showMaximized()
 
