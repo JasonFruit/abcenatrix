@@ -46,6 +46,7 @@ _default_settings = {
     "Open directory": homedir,
     "Save directory": homedir,
     "Default fit": "width",
+    "MIDI instrument": 1
 }
 
 app_dir = os.path.join(homedir,
@@ -91,6 +92,8 @@ class Settings(object):
 qt_app = QApplication(sys.argv)
 
 settings = Settings()
+if settings.get("MIDI instrument") == None:
+    settings.set("MIDI instrument", 1)
 
 # if there's a filename passed in as an argument, load it; otherwise
 # start empty

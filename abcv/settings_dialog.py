@@ -5,6 +5,14 @@ from __future__ import nested_scopes, generators, division, absolute_import, wit
 from PySide.QtCore import *
 from PySide.QtGui import *
 
+from abcv.general_midi import general_midi
+
+def line():
+    out = QFrame()
+    out.setFrameShape(QFrame.HLine)
+    out.setFrameShadow(QFrame.Sunken)
+    return out
+
 class SettingsDialog(QDialog):
     def __init__(self, settings=None, parent=None):
         QDialog.__init__(self, parent=parent)
@@ -28,11 +36,7 @@ class SettingsDialog(QDialog):
         self.email_edit.setText(self.settings.get("User email"))
         self.frm.addRow("Email", self.email_edit)
 
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-
-        self.frm.addRow(line)
+        self.frm.addRow(line())
 
         self.frm.addRow(QLabel("Display options:"))
         
@@ -42,6 +46,21 @@ class SettingsDialog(QDialog):
         self.fit_list.addItems(fits)
         self.fit_list.setCurrentIndex(fits.index(self.settings.get("Default fit")))
         self.frm.addRow("Fit page to", self.fit_list)
+
+        self.frm.addRow(line())
+
+        self.frm.addRow(QLabel("MIDI options"))
+
+        self.instrument_list = QComboBox()
+
+        current_instrument = self.settings.get("MIDI instrument")
+        
+        for k in general_midi.keys():
+            self.instrument_list.addItem(general_midi[k])
+            if k == current_instrument:
+                self.instrument_list.setCurrentIndex(k-1)
+
+        self.frm.addRow(QLabel("MIDI instrument"), self.instrument_list)
 
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
@@ -57,4 +76,8 @@ class SettingsDialog(QDialog):
         self.settings.set("User name", self.username_edit.text())
         self.settings.set("User email", self.email_edit.text())
         self.settings.set("Default fit", self.fit_list.currentText())
+        for k in general_midi.keys():
+            if general_midi[k] == self.instrument_list.currentText():
+                self.settings.set("MIDI instrument", k)
+                return
         

@@ -81,20 +81,32 @@ contents are the top-level properties of the tune.  Also has:
         self.xref = xref
         self.title = ""
         self.content = ""
-    def write_svg(self, filename):
-        """Write an SVG file of the first page of the tune to the specified
-filename"""
 
-        # write the tune to a temp file
+    def _write_temp_file(self, midi_program=None):
+        abc = self.content
+
+        # insert an abc2midi directive for the instrument if needed
+        if midi_program != None:
+            midi_pos = abc.index("\n", abc.index("\nK:") + 1)
+            abc = abc[:midi_pos] + "\n%%%%MIDI program %s\n" % midi_program + abc[midi_pos + 1:]
         with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             tmp_fn = f.name
 
             # Python 3 first, then 2
             try:
-                f.write(self.content.encode("utf-8"), "utf-8")
+                f.write(abc.encode("utf-8"), "utf-8")
             except:
-                f.write(self.content.encode("utf-8"))
+                f.write(abc.encode("utf-8"))
             f.flush()
+
+            return f.name
+        
+    def write_svg(self, filename):
+        """Write an SVG file of the first page of the tune to the specified
+filename"""
+
+        # write the tune to a temp file
+        tmp_fn = self._write_temp_file()
 
         # convert to an SVG; abcm2ps adds 001 to the base filename
         # (and for succeeding pages, 002, 003 …)
@@ -107,21 +119,14 @@ filename"""
         os.system(
             "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
 
-    def write_midi(self, filename):
+    def write_midi(self, filename, midi_program=None):
         """Write MIDI of the tune to the specified filename"""
 
-        
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            # Python 3 first, then 2            
-            try:
-                f.write(self.content.encode("utf-8"), "utf-8")
-            except:
-                f.write(self.content.encode("utf-8"))
-                
-            tmp_fn = f.name
-
-            f.flush()
-
+        if midi_program == None:
+            tmp_fn = self._write_temp_file()
+        else:
+            tmp_fn = self._write_temp_file(midi_program=midi_program)
+            
         # convert to MIDI
         os.system(
             abc2midi + " %(tmpfile)s -o %(filename)s" %
@@ -149,16 +154,10 @@ original unchanged."""
 
 
     def _replace_with_abc2abc_output(self, abc2abc_args):
-        with tempfile.NamedTemporaryFile() as f:
-            # Python 3 first, then 2
-            try:
-                f.write(self.content.encode("utf-8"), "utf-8")
-            except:
-                f.write(self.content.encode("utf-8"))
-            f.flush()
+        tmp_fn = self._write_temp_file()
             
-            self.update_from_abc(
-                check_output([abc2abc, f.name] + abc2abc_args).decode("utf-8"))
+        self.update_from_abc(
+            check_output([abc2abc, tmp_fn] + abc2abc_args).decode("utf-8"))
         
 
 # order of encodings to try when opening files, ordered by prevalence

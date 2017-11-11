@@ -403,7 +403,9 @@ class Application(QMainWindow):
         self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
         
         self._current_tune.write_svg(self.tmp_svg)
-        self._current_tune.write_midi(self.tmp_midi)
+        self._current_tune.write_midi(
+            self.tmp_midi,
+            midi_program=self.settings.get("MIDI instrument"))
         self.abc_display.load(self.tmp_svg)
         if self.midi.playing:
             self.midi.stop()
