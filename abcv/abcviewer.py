@@ -19,11 +19,14 @@ from abcv.settings_dialog import SettingsDialog
 from abcv.about import about_text
 
 class TuneListItem(QListWidgetItem):
+    """A QListItem that can carry a tune"""
     def __init__(self, tune):
         QListWidgetItem.__init__(self, tune.title)
         self.tune = tune
 
 def show_tune_info(tune, parent=None):
+    """Show a dialog box with the information fields of an ABC tune"""
+    
     message = []
     defined = information_fields.keys()
     
@@ -38,18 +41,24 @@ def show_tune_info(tune, parent=None):
     return dlg.exec_()
 
 class Application(QMainWindow):
+    """The main ABCenatrix application window"""
     def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
         self.setWindowIcon(
             QIcon(os.path.join(os.path.dirname(__file__),
                                "/usr/share/pixmaps/abcviewer.png")))
 
+        # to the extent that there is a file, it starts unchanged
         self._dirty = False
         
         self.midi = MidiPlayer()
-        
+
         self.settings = settings
+
+        # no tune 'til there's a tune
         self._current_tune = None
+
+        # add menus and their contents
         self._setUpMenus()
 
         # there must be one main widget, so we need this one; we'll
@@ -62,18 +71,17 @@ class Application(QMainWindow):
         self.tunebook_hbox = QHBoxLayout()
         self.central_widget.setLayout(self.tunebook_hbox)
 
+        # holds the title list and its associated controls
         self.title_vbox = QVBoxLayout()
 
-        self.title_control_hbox = QHBoxLayout()
-
+        # a menu button for title-list filter actions
         self.title_filter_btn = QPushButton("&Filter")
         self.filter_menu = self._set_up_filter_menu()
         self.title_filter_btn.setMenu(self.filter_menu)
 
-        self.title_control_hbox.addWidget(self.title_filter_btn, stretch=0)
+        self.title_vbox.addWidget(self.title_filter_btn, stretch=0)
 
-        self.title_vbox.addLayout(self.title_control_hbox, stretch=0)
-
+        # the list of tune titles
         self.title_list = QListWidget()
         self.title_list.currentItemChanged.connect(self._on_index_change)
         
@@ -123,6 +131,10 @@ class Application(QMainWindow):
     @dirty.setter
     def dirty(self, val):
         self._dirty = val
+
+        # this is a property because we need to alter the window title
+        # to indicate unsaved changes
+
         if self._dirty:
             if self.abc_file.filename != None:
                 self.setWindowTitle("%s (modified)" % self.abc_file.filename)
@@ -136,182 +148,103 @@ class Application(QMainWindow):
                 
 
     def _setUpMenus(self):
+        """Add the menus to the menu bar and fill them with a cornucopia of
+        choices"""
+        
         # top-level menus
-        self.file_menu = self.menuBar().addMenu("Tune&book")
+        self.tunebook_menu = self.menuBar().addMenu("Tune&book")
         self.view_menu = self.menuBar().addMenu("Vie&w")
         self.tune_menu = self.menuBar().addMenu("&Tune")
         self.playback_menu = self.menuBar().addMenu("&Playback")
         self.app_menu = self.menuBar().addMenu("&ABCenatrix")
         
-        # open and save go in the file menu
-        self.file_open = QAction("&Open", self)
-        self.file_open.setShortcut("Ctrl+O")
-        self.file_open.setStatusTip("Open a tunebook")
-        self.file_open.triggered.connect(self._prompt_load)
+        def addAction(menu, label, shortcut, handler):
+            """A helper function to add actions to menus"""
+            action = QAction(label, self)
+            action.setShortcut(shortcut)
+            action.triggered.connect(handler)
+            menu.addAction(action)
+            return action
 
-        self.file_save = QAction("&Save", self)
-        self.file_save.setShortcut("Ctrl+S")
-        self.file_save.setStatusTip("Save the tunebook")
-        self.file_save.triggered.connect(self._save_tunebook)
-
-        self.file_new = QAction("&New", self)
-        self.file_new.setShortcut("Ctrl+Shift+N")
-        self.file_new.setStatusTip("Create new tunebook")
-        self.file_new.triggered.connect(self._new_tunebook)
-
-        self.file_close = QAction("&Close", self)
-        self.file_close.setShortcut("Ctrl+W")
-        self.file_close.setStatusTip("Close the current tunebook")
-        self.file_close.triggered.connect(self._new_tunebook)
-
-        self.file_menu.addAction(self.file_open)
-        self.file_menu.addAction(self.file_save)
-        self.file_menu.addAction(self.file_new)
-        self.file_menu.addAction(self.file_close)
+        # lines get a little long here but are unwrapped since they're
+        # stereotyped and probably won't require frequent reading or
+        # edits
+        
+        # Tunebook menu choices
+        self.tunebook_open = addAction(self.tunebook_menu, "&Open", "Ctrl+O", self._prompt_load)
+        self.tunebook_save = addAction(self.tunebook_menu, "&Save", "Ctrl+S", self._save_tunebook)
+        self.tunebook_new = addAction(self.tunebook_menu, "&New", "Ctrl+Shift+N", self._new_tunebook)
+        self.tunebook_close = addAction(self.tunebook_menu, "&Close", "Ctrl+W", self._new_tunebook)
 
         # fit choices go in a Fit submenu of the view menu
         self.view_fit_menu = self.view_menu.addMenu("Fit")
         
-        self.view_fit_width = QAction("Width", self)
-        self.view_fit_width.triggered.connect(self._fit_width)
-        self.view_fit_height = QAction("Height", self)
-        self.view_fit_height.triggered.connect(self._fit_height)
-        self.view_fit_all = QAction("All", self)
-        self.view_fit_all.triggered.connect(self._fit_all)
-        
-        self.view_fit_menu.addAction(self.view_fit_width)
-        self.view_fit_menu.addAction(self.view_fit_height)
-        self.view_fit_menu.addAction(self.view_fit_all)
+        self.view_fit_width = addAction(self.view_fit_menu, "Width", "", self._fit_width)
+        self.view_fit_height = addAction(self.view_fit_menu, "Height", "", self._fit_height)
+        self.view_fit_all = addAction(self.view_fit_menu, "All", "", self._fit_all)
 
-        self.tune_transpose = QAction("Tra&nspose…", self)
-        self.tune_transpose.triggered.connect(self._transpose)
+        # tune menu choices
+        self.tune_transpose = addAction(self.tune_menu, "Tra&nspose…", "", self._transpose)
+        self.tune_edit = addAction(self.tune_menu, "&Edit the current tune", "Ctrl+E", self._edit_tune)
+        self.tune_new_tune = addAction(self.tune_menu, "&New tune", "Ctrl+N", self._new_tune)
+        self.tune_delete_tune = addAction(self.tune_menu, "&Delete tune", "Ctrl+D", self._delete_tune)
 
-        self.tune_menu.addAction(self.tune_transpose)
-
-        self.tune_edit = QAction("&Edit the current tune", self)
-        self.tune_edit.setShortcut("Ctrl+E")
-        self.tune_edit.setStatusTip("Edit the tune with live preview")
-        self.tune_edit.triggered.connect(self._edit_tune)
-
-        self.tune_menu.addAction(self.tune_edit)
-
-        self.tune_new_tune = QAction("&New tune", self)
-        self.tune_new_tune.setShortcut("Ctrl+N")
-        self.tune_new_tune.setStatusTip("Edit a new tune with live preview")
-        self.tune_new_tune.triggered.connect(self._new_tune)
-
-        self.tune_menu.addAction(self.tune_new_tune)
-
-        self.tune_delete_tune = QAction("&Delete tune", self)
-        self.tune_delete_tune.setShortcut("Ctrl+D")
-        self.tune_delete_tune.setStatusTip("Delete selected tune")
-        self.tune_delete_tune.triggered.connect(self._delete_tune)
-
-        self.tune_menu.addAction(self.tune_delete_tune)
-
+        # options to add a tune to a different tunebook go in a submenu of the tune menu
         self.tune_add_to_menu = self.tune_menu.addMenu("&Add to:")
         
-        self.tune_add_to_book = QAction("E&xisting tunebook…", self)
-        self.tune_add_to_book.setStatusTip("Copy tune to an existing ABC file")
-        self.tune_add_to_book.triggered.connect(self._add_tune_to_tunebook)
+        self.tune_add_to_book = addAction(self.tune_add_to_menu, "E&xisting tunebook…", "", self._add_tune_to_tunebook)
+        self.tune_add_to_new_book = addAction(self.tune_add_to_menu, "&New tunebook…", "", self._add_tune_to_new_tunebook)
 
-        self.tune_add_to_menu.addAction(self.tune_add_to_book)
+        # rest of the tune menu choices
+        self.tune_print = addAction(self.tune_menu, "&Print", "Ctrl+P", self._print)
+        self.tune_info = addAction(self.tune_menu, "&Info", "Ctrl+I", self._tune_info)
 
-        self.tune_add_to_new_book = QAction("&New tunebook…", self)
-        self.tune_add_to_new_book.setStatusTip(
-            "Create a new ABC file with only this tune")
-        self.tune_add_to_new_book.triggered.connect(
-            self._add_tune_to_new_tunebook)
+        # playback menu choices
+        self.playback_start = addAction(self.playback_menu, "&Start/Stop", QKeySequence(Qt.Key.Key_Space), self._playback_start)
+        self.playback_restart = addAction(self.playback_menu, "&Jump to start", "Ctrl+J", self._playback_restart)
 
-        self.tune_add_to_menu.addAction(self.tune_add_to_new_book)
-
-        self.tune_print = QAction("&Print", self)
-        self.tune_print.setShortcut("Ctrl+P")
-        self.tune_print.setStatusTip("Print a tune")
-        self.tune_print.triggered.connect(self._print)
-
-        self.tune_menu.addAction(self.tune_print)
-
-        self.tune_info = QAction("&Info", self)
-        self.tune_info.setShortcut("Ctrl+I")
-        self.tune_info.setStatusTip("Info on the selected tune")
-        self.tune_info.triggered.connect(self._tune_info)
-
-        self.tune_menu.addAction(self.tune_info)
-
-        self.playback_start = QAction("&Start/Stop", self)
-        self.playback_start.setShortcut(QKeySequence(Qt.Key.Key_Space))
-        self.playback_start.setStatusTip("Play/stop the selected tune")
-        self.playback_start.triggered.connect(self._playback_start)
-
-        self.playback_menu.addAction(self.playback_start)
-
-        self.playback_restart = QAction("&Jump to start", self)
-        self.playback_restart.setShortcut("Ctrl+J")
-        self.playback_restart.setStatusTip("Restart the selected tune")
-        self.playback_restart.triggered.connect(self._playback_restart)
-
-        self.playback_menu.addAction(self.playback_restart)
-
-        self.app_settings = QAction("&Settings…", self)
-        self.app_settings.setStatusTip("Edit app settings")
-        self.app_settings.triggered.connect(self._app_settings)
-
-        self.app_menu.addAction(self.app_settings)
-
+        # app menu choices
+        self.app_settings = addAction(self.app_menu, "&Settings…", "", self._app_settings)
         self.app_menu.addSeparator()
-
-        self.app_about_abc = QAction("&About ABC notation", self)
-        self.app_about_abc.setStatusTip("Information about ABC notation")
-        self.app_about_abc.triggered.connect(self._about_abc)
-
-        self.app_menu.addAction(self.app_about_abc)
-
-        self.app_learn_abc = QAction("&Learn ABC notation", self)
-        self.app_learn_abc.setStatusTip("Resources for learning ABC notation")
-        self.app_learn_abc.triggered.connect(self._learn_abc)
-
-        self.app_menu.addAction(self.app_learn_abc)
-
+        self.app_about_abc = addAction(self.app_menu, "&About ABC notation", "", self._about_abc)
+        self.app_learn_abc = addAction(self.app_menu, "&Learn ABC notation", "", self._learn_abc)
         self.app_menu.addSeparator()
-        
-        self.app_about = QAction("&About the ABCenatrix", self)
-        self.app_about.setStatusTip("Information about the ABCenatrix")
-        self.app_about.triggered.connect(self._app_about)
-
-        self.app_menu.addAction(self.app_about)
+        self.app_about = addAction(self.app_menu, "&About the ABCenatrix", "", self._app_about)
 
     def _set_up_filter_menu(self):
+        """Set up the filter menu, which is attached to a button at the top of
+        the title list"""
+        
         menu = QMenu("&Filter", self)
 
         self.apply_filter = QAction("&Apply filter…", self)
-        self.apply_filter.setStatusTip("Create and apply a filter")
         self.apply_filter.triggered.connect(self._apply_filter)
 
         menu.addAction(self.apply_filter)
         
         self.clear_filter = QAction("&Clear filter", self)
-        self.clear_filter.setStatusTip("Clear filter")
         self.clear_filter.triggered.connect(self._clear_filter)
 
         menu.addAction(self.clear_filter)
 
         return menu
 
-    def _fit_width(self, *args, **kwargs):
-        self.abc_display.fit_style = fits.FIT_WIDTH
+    def _do_fit(self, fit, fit_dsc):
+        """Fit the SVG display to the specified fit and save it in the
+        settings"""
+        
+        self.abc_display.fit_style = fit
         self.abc_display.repaint()
-        self.settings.set("Default fit", "width")
+        self.settings.set("Default fit", fit_dsc)
+        
+    def _fit_width(self, *args, **kwargs):
+        self._do_fit(fits.FIT_WIDTH, "width")
 
     def _fit_height(self, *args, **kwargs):
-        self.abc_display.fit_style = fits.FIT_HEIGHT
-        self.abc_display.repaint()
-        self.settings.set("Default fit", "height")
+        self._do_fit(fits.FIT_HEIGHT, "height")
 
     def _fit_all(self, *args, **kwargs):
-        self.abc_display.fit_style = fits.FIT_ALL
-        self.abc_display.repaint()
-        self.settings.set("Default fit", "all")
+        self._do_fit(fits.FIT_ALL, "all")
         
     def _prompt_load(self):
         """Prompt for a file to load"""
@@ -333,12 +266,11 @@ class Application(QMainWindow):
     def _load(self, filename):
         """Load a new ABC file"""
 
+        # store the directory to start there next time
         self.settings.set("Open directory", os.path.dirname(filename))
 
         self.abc_file = AbcTunebook(filename)
         
-        self.setWindowTitle(self.abc_file.filename)
-
         self.title_list.clear()
 
         for tune in self.abc_file:
@@ -348,6 +280,7 @@ class Application(QMainWindow):
 
     def _new_tunebook(self, *args, **kwargs):
         """Create a new, empty ABC tunebook"""
+        
         if not self._confirm_discard_changes():
             return
 
@@ -374,6 +307,8 @@ class Application(QMainWindow):
             self._save(filename)
     
     def _save(self, filename=None):
+        # if there's no filename either passed or in the tunebook,
+        # prompt for one, then save
         if not filename:
             if self.abc_file.filename:
                 filename = self.abc_file.filename
@@ -392,24 +327,34 @@ class Application(QMainWindow):
             except:
                 pass # oh well
 
+        # if you've changed to a tune, show it
         if current:
             self._current_tune = current.tune
             self.display_current_tune()
 
     def display_current_tune(self):
-        #export the selected tune as an SVG and display it
+        """Show the current tune"""
+
         tempdir = tempfile.gettempdir()
-        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
-        self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
         
+        #export the selected tune as an SVG
+        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
         self._current_tune.write_svg(self.tmp_svg)
+
+        # load the new SVG file and show it
+        self.abc_display.load(self.tmp_svg)
+
+        # export the tune as MIDI to get ready to play it
+        self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
         self._current_tune.write_midi(
             self.tmp_midi,
             midi_program=self.settings.get("MIDI instrument"))
-        self.abc_display.load(self.tmp_svg)
+        
+        # if you're still playing the previous tune, stop that
         if self.midi.playing:
             self.midi.stop()
-            
+
+        # prepare the mixer to play the new MIDI file
         self.midi.load(self.tmp_midi)
         
     def _print(self, *args, **kwargs):
@@ -510,10 +455,13 @@ class Application(QMainWindow):
 
     def _confirm(self, title, message):
         msgBox = QMessageBox(self)
+        
         msgBox.setWindowTitle(title)
-        msgBox.setInformativeText(message)
+        msgBox.setText(message)
+        
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Ok)
+        
         return msgBox.exec_() == QMessageBox.Ok
 
     def _confirm_discard_changes(self):
@@ -565,15 +513,14 @@ class Application(QMainWindow):
     def _app_settings(self, *args, **kwargs):
         dlg = SettingsDialog(self.settings)
         accepted = dlg.exec_()
-        #shouldn't have to do anything
 
     def _app_about(self, *args, **kwargs):
         msgBox = QMessageBox(self)
         msgBox.setWindowTitle("About the ABCenatrix")
-        msgBox.setInformativeText(about_text)
+        msgBox.setText(about_text)
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.setDefaultButton(QMessageBox.Ok)
-        return msgBox.exec_() == QMessageBox.Ok
+        return msgBox.exec_() == QMessageBox.Ok # 'cause we care?
 
     def _about_abc(self, *args, **kwargs):
         wb.open("http://abcnotation.com/about#abc")
@@ -581,3 +528,8 @@ class Application(QMainWindow):
     def _learn_abc(self, *args, **kwargs):
         wb.open("http://abcnotation.com/learn")
 
+    def closeEvent(self, event):
+        if self._confirm_discard_changes():
+            event.accept()
+        else:
+            event.ignore()
