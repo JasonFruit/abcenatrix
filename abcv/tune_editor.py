@@ -5,8 +5,8 @@ from __future__ import nested_scopes, generators, division, absolute_import, wit
 from PySide.QtCore import *
 from PySide.QtGui import *
 import os, tempfile
-from abcv.tunebook import AbcTune, AbcTunebook, tune_from_abc
-from abcv.scrollable_svg import ScrollableSvgWidget, fits
+from abcv.tunebook import tune_from_abc
+from abcv.abc_display import AbcDisplay, fits
 from uuid import uuid4
 
 tune_template = """X:0
@@ -47,18 +47,10 @@ class AbcTuneEditor(QDialog):
 
         self.hbox.addWidget(self.editor)
 
-        self.svg = ScrollableSvgWidget(self.height(),
-                                       self.width(),
-                                       fit_style=fits.FIT_WIDTH)
+        self.abc_display = AbcDisplay(parent=self,
+                                      fit=fits.FIT_WIDTH)
 
-        self.tmp_svg = None
-
-        # the scroll widget to contain the SVG tune
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setBackgroundRole(QPalette.Light)
-        self.scroll_area.setWidget(self.svg)
-        self.svg.load("tmp.svg")
-        self.hbox.addWidget(self.scroll_area)
+        self.hbox.addWidget(self.abc_display)
 
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
@@ -74,20 +66,8 @@ class AbcTuneEditor(QDialog):
         self.redraw_tune()
 
     def redraw_tune(self):
-        if self.tmp_svg:
-            try:
-                os.unlink(self.tmp_svg)
-            except:
-                pass
-
-        tempdir = tempfile.gettempdir()
-        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
-
-        self._tune.write_svg(self.tmp_svg)
-
-        if os.path.exists(self.tmp_svg):
-            self.svg.load(self.tmp_svg)
-
+        self.abc_display.tune = self._tune
+        
     @property
     def tune(self):
         return tune_from_abc(self.editor.document().toPlainText().strip())
@@ -97,19 +77,10 @@ class AbcTuneEditor(QDialog):
         self._tune = new_tune
         self.editor.document().setPlainText(new_tune.content.strip())
         self.redraw_tune()
-
-    def resizeEvent(self, *args, **kwargs):
-        self.svg.visible_width, self.svg.visible_height = self.scroll_area.size().toTuple()
-        self.redraw_tune()
         
+    def changeEvent(self, event):
+        if event.type() == QEvent.WindowStateChange:
+            self.abc_display.resizeEvent()
+            self.redraw_tune()
+        QWidget.changeEvent(self, event)
 
-if __name__ == "__main__":
-    import sys
-    qt_app = QApplication(sys.argv)
-    app = AbcTuneEditor()
-    app.exec_()
-    
-    # Run the application's event loop
-    qt_app.exec_()
-
-    print(app.tune.content)

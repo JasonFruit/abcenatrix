@@ -11,7 +11,8 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
-from abcv.scrollable_svg import ScrollableSvgWidget, fits
+from abcv.scrollable_svg import fits
+from abcv.abc_display import AbcDisplay
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
@@ -89,8 +90,8 @@ class Application(QMainWindow):
         
         self.tunebook_hbox.addLayout(self.title_vbox, stretch=0) # fixed width
 
-        # get the width and height of the window
-        width, height = self.size().toTuple()
+        # # get the width and height of the window
+        # width, height = self.size().toTuple()
 
         if self.settings.get("Default fit") == "width":
             fit = fits.FIT_WIDTH
@@ -104,17 +105,10 @@ class Application(QMainWindow):
             
         # the tune is in an SVG display widget that changes height
         # based on fit parameters
-        self.abc_display = ScrollableSvgWidget(height,
-                                               width,
-                                               fit_style=fit)
-
-        # the scroll widget to contain the SVG tune
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setBackgroundRole(QPalette.Light)
-        self.scroll_area.setWidget(self.abc_display)
+        self.abc_display = AbcDisplay(parent=self, fit=fit)
 
         # stretches horizontally to fill screen
-        self.tunebook_hbox.addWidget(self.scroll_area, stretch=1.0)
+        self.tunebook_hbox.addWidget(self.abc_display, stretch=1.0)
 
         self.tmp_svg = None
 
@@ -234,7 +228,7 @@ class Application(QMainWindow):
         settings"""
         
         self.abc_display.fit_style = fit
-        self.abc_display.repaint()
+        self.abc_display.refresh()
         self.settings.set("Default fit", fit_dsc)
         
     def _fit_width(self, *args, **kwargs):
@@ -335,17 +329,11 @@ class Application(QMainWindow):
     def display_current_tune(self):
         """Show the current tune"""
 
+        self.abc_display.tune = self._current_tune
         tempdir = tempfile.gettempdir()
         
-        #export the selected tune as an SVG
-        self.tmp_svg = os.path.join(tempdir, "%s.svg" % uuid4())
-        self._current_tune.write_svg(self.tmp_svg)
-
-        # load the new SVG file and show it
-        self.abc_display.load(self.tmp_svg)
-
         # export the tune as MIDI to get ready to play it
-        self.tmp_midi = self.tmp_svg.replace(".svg", ".mid")
+        self.tmp_midi = os.path.join(tempdir, "%s.mid" % uuid4())
         self._current_tune.write_midi(
             self.tmp_midi,
             midi_program=self.settings.get("MIDI instrument"))
@@ -370,10 +358,10 @@ class Application(QMainWindow):
                         printDialog.printer().height())
             painter = QPainter()
             painter.begin(printDialog.printer())
-            self.abc_display.renderer().render(painter, QRect(0,
-                                                              0,
-                                                              pageSize[0],
-                                                              pageSize[1]))
+            self.abc_display.svg.renderer().render(painter, QRect(0,
+                                                                  0,
+                                                                  pageSize[0],
+                                                                  pageSize[1]))
 
         # reset the fit for screen display
         self.abc_display.fit_style = old_fit
@@ -423,6 +411,7 @@ class Application(QMainWindow):
 
     def _edit_tune(self, *args, **kwargs):
         dlg = AbcTuneEditor(self.settings, self._current_tune, parent=self)
+        dlg.showMaximized()
         accepted = dlg.exec_()
         if accepted:
             self._current_tune.update_from_abc(dlg.tune.content)
@@ -475,10 +464,6 @@ class Application(QMainWindow):
         tune = self._current_tune
         show_tune_info(tune, self)
         
-
-    def resizeEvent(self, *args, **kwargs):
-        """resize the ABC display to match the new window size"""
-        self.abc_display.visible_width, self.abc_display.visible_height = self.scroll_area.size().toTuple()
 
     def _playback_start(self, *args, **kwargs):
         if self.midi.playing:

@@ -101,9 +101,9 @@ contents are the top-level properties of the tune.  Also has:
 
             return f.name
         
-    def write_svg(self, filename):
+    def write_svg(self, filename, page=1):
         """Write an SVG file of the first page of the tune to the specified
-filename"""
+        filename, returning the page count"""
 
         # write the tune to a temp file
         tmp_fn = self._write_temp_file()
@@ -115,9 +115,20 @@ filename"""
             {"filename": filename,
              "tmpfile": tmp_fn})
 
+        page_str = "{:0>3d}".format(page)
+        
         # move the whatnot001.svg file to whatnot.svg
         os.system(
-            "mv %s %s" % (filename.replace(".svg", "001.svg"), filename))
+            "cp %s %s" % (filename.replace(".svg", "%s.svg" % page_str), filename))
+
+        pages = 0
+
+        while os.path.exists(
+                filename.replace(".svg",
+                                 "%s.svg" % "{:0>3d}".format(pages + 1))):
+            pages += 1
+
+        return pages
 
     def write_midi(self, filename, midi_program=None):
         """Write MIDI of the tune to the specified filename"""
