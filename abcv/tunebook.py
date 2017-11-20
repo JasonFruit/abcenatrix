@@ -239,6 +239,17 @@ filename and a method to return a sorted list of titles"""
         """Return a list of tune titles"""
         return [tune.title for tune in self]
 
+    def move(self, item, direction):
+        index = self.index(item)
+
+        if direction > 0 and len(self) > index + 1:
+            cur, next = self[index], self[index + 1]
+            self[index + 1], self[index] = cur, next
+        elif direction < 0 and index > 1:
+            cur, prev = self[index], self[index - 1]
+            self[index - 1], self[index] = cur, prev
+            
+            
     def renumber(self):
         """Renumber tunes with sequential xrefs"""
         xref = 1

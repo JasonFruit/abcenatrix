@@ -87,6 +87,21 @@ class Application(QMainWindow):
         self.title_list.currentItemChanged.connect(self._on_index_change)
         
         self.title_vbox.addWidget(self.title_list, stretch=1)
+
+        self.title_move_hbox = QHBoxLayout()
+
+        self.title_up_btn = QPushButton("↑")
+        self.title_up_btn.setToolTip("Move selected item up")
+        self.title_up_btn.clicked.connect(self._move_tune_up)
+        self.title_down_btn = QPushButton("↓")
+        self.title_down_btn.setToolTip("Move selected item down")
+        self.title_down_btn.clicked.connect(self._move_tune_down)
+
+        self.title_move_hbox.addWidget(self.title_up_btn)
+        self.title_move_hbox.addWidget(self.title_down_btn)
+
+        self.title_vbox.addLayout(self.title_move_hbox, stretch=0)
+        
         
         self.tunebook_hbox.addLayout(self.title_vbox, stretch=0) # fixed width
 
@@ -169,7 +184,9 @@ class Application(QMainWindow):
         self.tunebook_save = addAction(self.tunebook_menu, "&Save", "Ctrl+S", self._save_tunebook)
         self.tunebook_new = addAction(self.tunebook_menu, "&New", "Ctrl+Shift+N", self._new_tunebook)
         self.tunebook_close = addAction(self.tunebook_menu, "&Close", "Ctrl+W", self._new_tunebook)
-
+        self.tunebook_move_up = addAction(self.tunebook_menu, "Move tune &up", "Ctrl+Up", self._move_tune_up)
+        self.tunebook_move_down = addAction(self.tunebook_menu, "Move tune &down", "Ctrl+Down", self._move_tune_down)
+        
         # fit choices go in a Fit submenu of the view menu
         self.view_fit_menu = self.view_menu.addMenu("Fit")
         
@@ -264,13 +281,16 @@ class Application(QMainWindow):
         self.settings.set("Open directory", os.path.dirname(filename))
 
         self.abc_file = AbcTunebook(filename)
-        
+
+        self._refresh_title_list()
+
+        self.dirty = False
+
+    def _refresh_title_list(self):
         self.title_list.clear()
 
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
-
-        self.dirty = False
 
     def _new_tunebook(self, *args, **kwargs):
         """Create a new, empty ABC tunebook"""
@@ -513,6 +533,16 @@ class Application(QMainWindow):
     def _learn_abc(self, *args, **kwargs):
         wb.open("http://abcnotation.com/learn")
 
+    def _move_tune_up(self, *args, **kwargs):
+        self.abc_file.move(self._current_tune, -1)
+        self._refresh_title_list()
+        self.dirty = True
+
+    def _move_tune_down(self, *args, **kwargs):
+        self.abc_file.move(self._current_tune, 1)
+        self._refresh_title_list()
+        self.dirty = True        
+        
     def closeEvent(self, event):
         if self._confirm_discard_changes():
             event.accept()
