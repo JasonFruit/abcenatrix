@@ -184,6 +184,7 @@ class Application(QMainWindow):
         self.tunebook_save = addAction(self.tunebook_menu, "&Save", "Ctrl+S", self._save_tunebook)
         self.tunebook_new = addAction(self.tunebook_menu, "&New", "Ctrl+Shift+N", self._new_tunebook)
         self.tunebook_close = addAction(self.tunebook_menu, "&Close", "Ctrl+W", self._new_tunebook)
+        self.tunebook_revert = addAction(self.tunebook_menu, "&Revert", "", self._revert_tunebook)
         self.tunebook_move_up = addAction(self.tunebook_menu, "Move tune &up", "Ctrl+Up", self._move_tune_up)
         self.tunebook_move_down = addAction(self.tunebook_menu, "Move tune &down", "Ctrl+Down", self._move_tune_down)
         
@@ -284,6 +285,11 @@ class Application(QMainWindow):
 
         self._refresh_title_list()
 
+        try:
+            self.title_list.setCurrentItem(self.title_list.item(0))
+        except:
+            pass # if it can't be done, we don't care why
+
         self.dirty = False
 
     def _refresh_title_list(self):
@@ -291,6 +297,12 @@ class Application(QMainWindow):
 
         for tune in self.abc_file:
             self.title_list.addItem(TuneListItem(tune))
+
+    def _select_tune_title(self, tune):
+        for i in range(self.title_list.count()):
+            if self.title_list.item(i).tune == tune:
+                self.title_list.setCurrentItem(self.title_list.item(i))
+                return
 
     def _new_tunebook(self, *args, **kwargs):
         """Create a new, empty ABC tunebook"""
@@ -301,6 +313,12 @@ class Application(QMainWindow):
         self.abc_file = AbcTunebook()
         self.title_list.clear()
         self.dirty = False
+
+    def _revert_tunebook(self, *args, **kwargs):
+        """Reload the tunebook from its original file"""
+
+        if self._confirm_discard_changes():
+            self._load(self.abc_file.filename)
         
 
     def _save_tunebook(self, *args, **kwargs):
@@ -534,14 +552,18 @@ class Application(QMainWindow):
         wb.open("http://abcnotation.com/learn")
 
     def _move_tune_up(self, *args, **kwargs):
-        self.abc_file.move(self._current_tune, -1)
-        self._refresh_title_list()
-        self.dirty = True
+        tune = self._current_tune
+        if self.abc_file.move(self._current_tune, -1):
+            self._refresh_title_list()
+            self._select_tune_title(tune)
+            self.dirty = True
 
     def _move_tune_down(self, *args, **kwargs):
-        self.abc_file.move(self._current_tune, 1)
-        self._refresh_title_list()
-        self.dirty = True        
+        tune = self._current_tune
+        if self.abc_file.move(self._current_tune, 1):
+            self._refresh_title_list()
+            self._select_tune_title(tune)
+            self.dirty = True        
         
     def closeEvent(self, event):
         if self._confirm_discard_changes():

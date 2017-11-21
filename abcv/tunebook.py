@@ -240,14 +240,21 @@ filename and a method to return a sorted list of titles"""
         return [tune.title for tune in self]
 
     def move(self, item, direction):
+        """Move a tune up or down based on direction; if tune cannot be moved,
+        return False; else True"""
+        
         index = self.index(item)
 
         if direction > 0 and len(self) > index + 1:
             cur, next = self[index], self[index + 1]
             self[index + 1], self[index] = cur, next
-        elif direction < 0 and index > 1:
+        elif direction < 0 and index > 0:
             cur, prev = self[index], self[index - 1]
             self[index - 1], self[index] = cur, prev
+        else:
+            return False
+
+        return True
             
             
     def renumber(self):
