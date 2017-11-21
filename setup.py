@@ -19,7 +19,7 @@ else:
     
 setup(
     name = "abcenatrix",
-    version = "0.4.3",
+    version = "0.4.4",
     author = "Jason R. Fruit",
     author_email = "jasonfruit@gmail.com",
     description = "A viewer, player, and editor for tunebooks in ABC musical notation.",

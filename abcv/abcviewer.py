@@ -312,6 +312,7 @@ class Application(QMainWindow):
 
         self.abc_file = AbcTunebook()
         self.title_list.clear()
+        self.abc_display.clear()
         self.dirty = False
 
     def _revert_tunebook(self, *args, **kwargs):
@@ -459,12 +460,18 @@ class Application(QMainWindow):
     def _delete_tune(self, *args, **kwargs):
 
         if self._confirm("Delete Tune", "Really delete %s?" % self._current_tune.title):
+            index = self.abc_file.index(self._current_tune)
+            
             self.abc_file.remove(self._current_tune)
-
-            self.title_list.clear()
-
-            for tune in self.abc_file:
-                self.title_list.addItem(TuneListItem(tune))
+            self._refresh_title_list()
+            
+            try:
+                self._select_tune_title(self.abc_file[index])
+            except IndexError:
+                try:
+                    self._select_tune_title(self.abc_file[0])
+                except IndexError:
+                    self.abc_display.clear()
 
             self.dirty = True
 

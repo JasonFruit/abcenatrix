@@ -90,11 +90,12 @@ class AbcDisplay(QWidget):
                 wid.hide()
                 
     def refresh(self):
-        self._svg_fn = _make_tmp_fn()
-        self.pages = self._tune.write_svg(self._svg_fn, page=self.page)
-        self.show_or_hide_pages()
-        self.svg.load(self._svg_fn)
-        self.show_page_num()
+        if self._tune:
+            self._svg_fn = _make_tmp_fn()
+            self.pages = self._tune.write_svg(self._svg_fn, page=self.page)
+            self.show_or_hide_pages()
+            self.svg.load(self._svg_fn)
+            self.show_page_num()
 
     def show_page_num(self):
         self.page_label.setText("%s of %s" % (self.page, self.pages))
@@ -108,6 +109,9 @@ class AbcDisplay(QWidget):
         if self.page > 1:
             self.page -= 1
             self.refresh()
+
+    def clear(self):
+        self.svg.clear()
 
 if __name__ == "__main__":
     from tunebook import *
