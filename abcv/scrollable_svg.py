@@ -26,7 +26,7 @@ class ScrollableSvgWidget(QSvgWidget):
         self.visible_width = visible_width
 
     def clear(self):
-        self.load(bytes("", "utf-8"))
+        self.load("".encode("utf-8"))
 
     def paintEvent(self, paint_event):
         painter = QPainter(self)
