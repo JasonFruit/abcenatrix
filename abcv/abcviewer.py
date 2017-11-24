@@ -12,7 +12,10 @@ from PySide.QtGui import *
 
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
-from abcv.abc_display import AbcDisplay
+if os.name == "posix":
+    from abcv.abc_display import AbcDisplay
+else:
+    from abcv.abc_display_win import AbcDisplay
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
