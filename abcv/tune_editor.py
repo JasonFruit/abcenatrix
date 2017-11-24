@@ -6,7 +6,12 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import os, tempfile
 from abcv.tunebook import tune_from_abc
-from abcv.abc_display import AbcDisplay, fits
+
+if os.name == "posix":
+    from abcv.abc_display import AbcDisplay, fits
+else:
+    from abcv.abc_display_win import AbcDisplay, fits
+    
 from uuid import uuid4
 
 tune_template = """X:0
