@@ -399,7 +399,7 @@ class Application(QMainWindow):
         printDialog = QPrintDialog(self)
 
         if printDialog.exec_() == QDialog.Accepted:
-            try:
+            if os.name == "posix":
                 pageSize = (printDialog.printer().width(),
                             printDialog.printer().height())
                 painter = QPainter()
@@ -408,7 +408,7 @@ class Application(QMainWindow):
                                                                       0,
                                                                       pageSize[0],
                                                                       pageSize[1]))
-            except AttributeError:
+            else:
                 self.abc_display.svg.print(printDialog.printer())
 
         # reset the fit for screen display
