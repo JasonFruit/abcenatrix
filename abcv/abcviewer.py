@@ -3,7 +3,7 @@
 # be futuristic!  That is, basically use Python 3.
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
-import os, sys, tempfile, codecs
+import os, platform, sys, tempfile, codecs
 from uuid import uuid4
 import webbrowser as wb
 
@@ -14,7 +14,7 @@ from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
 
 # QSvgWidget doesn't display barlines on Windows :(
-if os.name == "posix":
+if os.name == "posix" and not "bsd" in platform.system().lower():
     from abcv.abc_display import AbcDisplay
 else:
     from abcv.abc_display_win import AbcDisplay
