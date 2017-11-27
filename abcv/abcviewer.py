@@ -13,11 +13,7 @@ from PySide.QtGui import *
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
 
-# QSvgWidget doesn't display barlines on Windows :(
-if os.name == "posix" and not "bsd" in platform.system().lower():
-    from abcv.abc_display import AbcDisplay
-else:
-    from abcv.abc_display_win import AbcDisplay
+from abcv.abc_display import AbcDisplay
     
 from abcv.tune_editor import AbcTuneEditor
 from abcv.midiplayer import MidiPlayer
