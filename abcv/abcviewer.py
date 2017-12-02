@@ -16,10 +16,10 @@ from abcv.scrollable_svg import fits
 from abcv.abc_display import AbcDisplay
     
 from abcv.tune_editor import AbcTuneEditor
-from abcv.midiplayer import MidiPlayer
 from abcv.filter_dialog import FilterDialog
 from abcv.settings_dialog import SettingsDialog
 from abcv.about import about_text
+from abcv.midi_mixin import MidiMixin
 
 class TuneListItem(QListWidgetItem):
     """A QListItem that can carry a tune"""
@@ -43,10 +43,12 @@ def show_tune_info(tune, parent=None):
     
     return dlg.exec_()
 
-class Application(QMainWindow):
+class Application(QMainWindow, MidiMixin):
     """The main ABCenatrix application window"""
     def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
+        MidiMixin.__init__(self)
+        
         self.setWindowIcon(
             QIcon(os.path.join(os.path.dirname(__file__),
                                "/usr/share/pixmaps/abcviewer.png")))
@@ -54,8 +56,6 @@ class Application(QMainWindow):
         # to the extent that there is a file, it starts unchanged
         self._dirty = False
         
-        self.midi = MidiPlayer()
-
         self.settings = settings
 
         # no tune 'til there's a tune
@@ -384,7 +384,7 @@ class Application(QMainWindow):
             self.midi.stop()
 
         # prepare the mixer to play the new MIDI file
-        self.midi.load(self.tmp_midi)
+        self.load_midi(self.tmp_midi)
         
     def _print(self, *args, **kwargs):
         # save the fit for display and change to fit the whole page,
@@ -516,20 +516,10 @@ class Application(QMainWindow):
         
 
     def _playback_start(self, *args, **kwargs):
-        if self.midi.playing:
-            if self.paused:
-                self.midi.unpause()
-                self.paused = False
-            else:
-                self.midi.pause()
-                self.paused = True
-        else:
-            self.midi.play()
-            self.paused = False
+        self.toggle_play()
 
     def _playback_restart(self, *args, **kwargs):
-        self.midi.stop()
-        self.paused = False
+        self.restart()
 
     def _apply_filter(self, *args, **kwargs):
         dlg = FilterDialog(self)

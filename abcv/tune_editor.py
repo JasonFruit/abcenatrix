@@ -2,13 +2,15 @@
 
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
+from uuid import uuid4
+
 from PySide.QtCore import *
 from PySide.QtGui import *
 import os, tempfile
 from abcv.tunebook import tune_from_abc
 
 from abcv.abc_display import AbcDisplay, fits
-from uuid import uuid4
+from abcv.midi_mixin import MidiMixin
 
 tune_template = """X:0
 T:Title
@@ -19,9 +21,10 @@ K:A
 A4"""
 
 
-class AbcTuneEditor(QDialog):
+class AbcTuneEditor(QDialog, MidiMixin):
     def __init__(self, settings, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
+        MidiMixin.__init__(self)
         self.setMinimumSize(QSize(800, 600))
         self.setModal(True)
 
@@ -36,6 +39,11 @@ class AbcTuneEditor(QDialog):
         self._tune = tune
         self.vbox = QVBoxLayout()
         self.setLayout(self.vbox)
+
+        self.menu_bar = QMenuBar(self)
+        self.layout().setMenuBar(self.menu_bar)
+
+        self._set_up_menus()
         
         self.hbox = QHBoxLayout()
         self.vbox.addLayout(self.hbox, stretch=1)
@@ -65,9 +73,40 @@ class AbcTuneEditor(QDialog):
     def _on_text_change(self, *args, **kwargs):
         self._tune.content = self.editor.document().toPlainText()
         self.redraw_tune()
+        self.export_midi()
 
     def redraw_tune(self):
         self.abc_display.tune = self._tune
+
+    def export_midi(self):
+        tempdir = tempfile.gettempdir()
+        
+        # export the tune as MIDI to get ready to play it
+        self.tmp_midi = os.path.join(tempdir, "%s.mid" % uuid4())
+        self._tune.write_midi(
+            self.tmp_midi,
+            midi_program=self.settings.get("MIDI instrument"))
+
+        self.load_midi(self.tmp_midi)
+
+
+    def _set_up_menus(self):
+        self.playback_menu = self.menu_bar.addMenu("&Playback")
+        self.editing_menu = self.menu_bar.addMenu("&Editing")
+
+        def addAction(menu, label, shortcut, handler):
+            """A helper function to add actions to menus"""
+            action = QAction(label, self)
+            action.setShortcut(shortcut)
+            action.triggered.connect(handler)
+            menu.addAction(action)
+            return action
+
+        addAction(self.playback_menu,
+                  "Start/Stop",
+                  "Ctrl+Space",
+                  lambda *args, **kwargs: self.toggle_play())
+
         
     @property
     def tune(self):
@@ -81,7 +120,7 @@ class AbcTuneEditor(QDialog):
         
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
-            self.abc_display.resizeEvent()
+            self.abc_display.resizeEvent(None)
             self.redraw_tune()
         QWidget.changeEvent(self, event)
 
