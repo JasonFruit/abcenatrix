@@ -1,53 +1,82 @@
-# coding=utf-8
+import time
+from threading import Thread
 
-from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
-
-import pygame
-from mido import MidiFile
-
+import mido
 
 class MidiPlayer(object):
     def __init__(self):
-        pygame.init()
+        self.port = mido.open_output(mido.get_output_names()[1])
+        self._cur_time = 0
+        self._filename = ""
+        self._file = None
+        self._playing = False
+        self._paused = False
         
-        try:
-            pygame.mixer.init(44100, -16,2,2048)
-        except pygame.error:
-            # sound will simply fail to play
-            pass
-        
-        self.mido_file = None
+    @property
+    def file(self):
+        return self._filename
+
+    @file.setter
+    def file(self, new_file):
+        self._filename = new_file
+        self._file = mido.MidiFile(new_file)
+
     def load(self, midi_fn):
-        self.filename = midi_fn
-        pygame.mixer.music.load(midi_fn)
-        self.mido_file = MidiFile(midi_fn)
+        self.file = midi_fn
+
     @property
     def duration(self):
-        return self.mido_file.length * 1000
+        return self._file.length * 1000.
+
     @property
     def current_time(self):
-        time =  pygame.mixer.music.get_pos()
-        if time < 0:
-            return 0.
-        else:
-            return float(time)
+        return self._cur_time
+
     @property
     def remaining_time(self):
-        return self.duration - self.current_time
+        if self.current_time > self.duration:
+            return 0
+        else:
+            return self.duration - self.current_time
+
     def play(self, midi_fn=None):
         if midi_fn:
             self.load(midi_fn)
-        pygame.mixer.music.play()
+
+        def do_play():
+            self._playing = True
+            self._paused = False
+
+            for msg in self._file.play():
+
+                while self._paused:
+                    time.sleep(0.3)
+                    if not self._playing:
+                        break
+
+                if not self._playing:
+                    break
+
+                self._cur_time += msg.time * 1000
+                self.port.send(msg)
+
+            self._playing = False
+            self._paused = False
+
+        t = Thread(target=do_play)
+        t.daemon = True
+
+        t.start()
+
     @property
     def playing(self):
-        return pygame.mixer.music.get_busy()
+        return self._playing
+
     def pause(self):
-        pygame.mixer.music.pause()
+        self._paused = True
+
     def unpause(self):
-        pygame.mixer.music.unpause()
+        self._paused = False
+
     def stop(self):
-        if self.playing:
-            pygame.mixer.music.stop()
-            # it seems like the only way to get it to reset properly
-            # is to reload the file
-            self.load(self.filename)
+        self._playing = False

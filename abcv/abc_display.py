@@ -16,7 +16,7 @@ def _make_tmp_fn():
     tempdir = tempfile.gettempdir()
     return os.path.join(tempdir, "%s.svg" % uuid4())
 
-if is_linux():
+if False:
     class AbcDisplay(QWidget):
         def __init__(self, tune=None, parent=None, fit=fits.FIT_ALL):
             QWidget.__init__(self, parent=parent)
