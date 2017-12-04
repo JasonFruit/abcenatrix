@@ -51,6 +51,7 @@ class MidiPlayer(object):
             for msg in self._file.play():
 
                 while self._paused:
+                    port.reset()    # stop sounds
                     time.sleep(0.3)
                     if not self._playing:
                         break
