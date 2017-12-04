@@ -5,7 +5,7 @@ import mido
 
 class MidiPlayer(object):
     def __init__(self):
-        self.port = mido.open_output(mido.get_output_names()[1])
+        self.port_name = mido.get_output_names()[1]
         self._cur_time = 0
         self._filename = ""
         self._file = None
@@ -44,6 +44,7 @@ class MidiPlayer(object):
             self.load(midi_fn)
 
         def do_play():
+            port = mido.open_output(self.port_name)
             self._playing = True
             self._paused = False
 
@@ -58,7 +59,7 @@ class MidiPlayer(object):
                     break
 
                 self._cur_time += msg.time * 1000
-                self.port.send(msg)
+                port.send(msg)
 
             self._playing = False
             self._paused = False

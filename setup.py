@@ -13,13 +13,13 @@ def read(fname):
 # preinstallation dependencies of its own, and would unduly limit
 # Python versions we could use, so don't even try
 if os.name == "posix":
-    requirements = ["pygame", "mido"]
+    requirements = ["mido"]
 else:
-    requirements = ["pyside", "pygame", "mido"]
+    requirements = ["pyside", "mido"]
     
 setup(
     name = "abcenatrix",
-    version = "0.5.2",
+    version = "0.6.2",
     author = "Jason R. Fruit",
     author_email = "jasonfruit@gmail.com",
     description = "A viewer, player, and editor for tunebooks in ABC musical notation.",
