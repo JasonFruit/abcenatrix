@@ -107,6 +107,8 @@ class Application(QMainWindow, MidiMixin):
         
         self.tunebook_hbox.addLayout(self.title_vbox, stretch=0) # fixed width
 
+        self.viewer_vbox = QVBoxLayout()
+        
         # # get the width and height of the window
         # width, height = self.size().toTuple()
 
@@ -119,14 +121,34 @@ class Application(QMainWindow, MidiMixin):
         else:
             # the default default, I guess
             fit = fits.FIT_ALL
-            
+
         # the tune is in an SVG display widget that changes height
         # based on fit parameters
         self.abc_display = AbcDisplay(parent=self, fit=fit)
 
-        # stretches horizontally to fill screen
-        self.tunebook_hbox.addWidget(self.abc_display, stretch=1.0)
+        # stretches vertically to fill screen
+        self.viewer_vbox.addWidget(self.abc_display, stretch=1.0)
 
+        self.midi_control_hbox = QHBoxLayout()
+
+        self.midi_control_hbox.addStretch()
+
+        self.scale_lbl = QLabel("Speed: 100%")
+        self.midi_control_hbox.addWidget(self.scale_lbl, stretch=0.0)
+        
+        self.scale_slider = QSlider(Qt.Horizontal)
+        self.scale_slider.setMinimum(25)
+        self.scale_slider.setMaximum(400)
+        self.scale_slider.setValue(100)
+        self.scale_slider.valueChanged.connect(self._scale_changed)
+        
+        self.midi_control_hbox.addWidget(self.scale_slider)
+
+        self.viewer_vbox.addLayout(self.midi_control_hbox, stretch=0.0)
+
+        # viewer vbox stretches horizontally to fill remaining space
+        self.tunebook_hbox.addLayout(self.viewer_vbox, stretch=1.0)
+        
         self.tmp_svg = None
 
         # if a filename was passed in, load it
@@ -572,3 +594,8 @@ class Application(QMainWindow, MidiMixin):
             event.accept()
         else:
             event.ignore()
+
+    def _scale_changed(self):
+        scale = (self.scale_slider.value() / 100.)
+        self.midi.scale = scale
+        self.scale_lbl.setText("Speed: %s%%" % self.scale_slider.value())

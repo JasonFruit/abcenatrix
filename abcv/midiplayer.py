@@ -11,6 +11,8 @@ class MidiPlayer(object):
         self._file = None
         self._playing = False
         self._paused = False
+        self._scale = 1.0
+        self._message_index = 0
         
     @property
     def file(self):
@@ -39,7 +41,15 @@ class MidiPlayer(object):
         else:
             return self.duration - self.current_time
 
-    def play(self, midi_fn=None):
+    @property
+    def scale(self):
+        return self._scale
+
+    @scale.setter
+    def scale(self, new):
+        self._scale = float(new)
+
+    def play(self, midi_fn=None, resume=False):
         if midi_fn:
             self.load(midi_fn)
 
@@ -48,19 +58,27 @@ class MidiPlayer(object):
             self._playing = True
             self._paused = False
 
-            for msg in self._file.play():
 
-                while self._paused:
-                    port.reset()    # stop sounds
-                    time.sleep(0.3)
-                    if not self._playing:
-                        break
+            # if you're not resuming, start from the beginning
+            if not resume:
+                start_index = 0
+            else:
+                start_index = self._message_index
 
-                if not self._playing:
-                    break
+            messages = [msg for msg in self._file]
+            for self._message_index in range(start_index, len(messages)):
 
-                self._cur_time += msg.time * 1000
-                port.send(msg)
+                if self._paused or not self._playing:
+                    port.reset()
+                    return
+                
+                msg = messages[self._message_index]
+                
+                time.sleep(msg.time / self._scale)
+                
+                if not msg.is_meta:
+                    port.send(msg)
+                    self._cur_time += msg.time * 1000
 
             self._playing = False
             self._paused = False
@@ -78,7 +96,8 @@ class MidiPlayer(object):
         self._paused = True
 
     def unpause(self):
-        self._paused = False
+        if self._paused:
+            self.play(resume=True)
 
     def stop(self):
         self._playing = False
