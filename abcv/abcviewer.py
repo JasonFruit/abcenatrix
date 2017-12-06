@@ -238,6 +238,7 @@ class Application(QMainWindow, MidiMixin):
         # playback menu choices
         self.playback_start = addAction(self.playback_menu, "&Start/Stop", QKeySequence(Qt.Key.Key_Space), self._playback_start)
         self.playback_restart = addAction(self.playback_menu, "&Jump to start", "Ctrl+J", self._playback_restart)
+        self.playback_port = addAction(self.playback_menu, "&Choose MIDI port", "", self._choose_midi_port)
 
         # app menu choices
         self.app_settings = addAction(self.app_menu, "&Settings…", "", self._app_settings)
@@ -599,3 +600,16 @@ class Application(QMainWindow, MidiMixin):
         scale = (self.scale_slider.value() / 100.)
         self.midi.scale = scale
         self.scale_lbl.setText("Speed: %s%%" % self.scale_slider.value())
+
+    def _choose_midi_port(self):
+        ports = self.midi.ports
+
+        port, ok = QInputDialog.getItem(self,
+                                        "Choose MIDI Port",
+                                        "Port:",
+                                        ports,
+                                        ports.index(self.midi.port_name))
+
+        if ok:
+            self.midi.port_name = port
+                                        

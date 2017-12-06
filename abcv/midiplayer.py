@@ -5,7 +5,13 @@ import mido
 
 class MidiPlayer(object):
     def __init__(self):
-        self.port_name = mido.get_output_names()[1]
+
+        # choose the first open port, for now
+        try:
+            self.port_name = self.ports[0]
+        except IndexError:
+            self.port_name = ""
+            
         self._cur_time = 0
         self._filename = ""
         self._file = None
@@ -13,7 +19,10 @@ class MidiPlayer(object):
         self._paused = False
         self._scale = 1.0
         self._message_index = 0
-        
+
+    @property
+    def ports(self):
+        return mido.get_output_names()
     @property
     def file(self):
         return self._filename
