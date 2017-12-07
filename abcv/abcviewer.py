@@ -48,7 +48,15 @@ class Application(QMainWindow, MidiMixin):
     def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
         MidiMixin.__init__(self)
-        
+
+        self.play_icon  = QIcon(
+            "/usr/share/icons/Adwaita/48x48/actions/media-playback-start.png")
+        self.pause_icon = QIcon(
+            "/usr/share/icons/Adwaita/48x48/actions/media-playback-pause.png")
+        self.stop_icon = QIcon(
+            "/usr/share/icons/Adwaita/48x48/actions/media-playback-stop.png")
+
+
         self.setWindowIcon(
             QIcon(os.path.join(os.path.dirname(__file__),
                                "/usr/share/pixmaps/abcviewer.png")))
@@ -140,9 +148,18 @@ class Application(QMainWindow, MidiMixin):
         self.scale_slider.setMinimum(25)
         self.scale_slider.setMaximum(400)
         self.scale_slider.setValue(100)
+        self.scale_slider.setMaximumWidth(120)
         self.scale_slider.valueChanged.connect(self._scale_changed)
         
         self.midi_control_hbox.addWidget(self.scale_slider)
+
+        self.play_pause_btn = QPushButton(self.play_icon, "")
+        self.play_pause_btn.clicked.connect(self._playback_start)
+        self.midi_control_hbox.addWidget(self.play_pause_btn)
+
+        self.stop_btn = QPushButton(self.stop_icon, "")
+        self.stop_btn.clicked.connect(self._playback_restart)
+        self.midi_control_hbox.addWidget(self.stop_btn)
 
         self.viewer_vbox.addLayout(self.midi_control_hbox, stretch=0.0)
 
@@ -540,10 +557,16 @@ class Application(QMainWindow, MidiMixin):
 
     def _playback_start(self, *args, **kwargs):
         self.toggle_play()
+        
+        if self.paused:
+            self.play_pause_btn.setIcon(self.play_icon)
+        else:
+            self.play_pause_btn.setIcon(self.pause_icon)
 
     def _playback_restart(self, *args, **kwargs):
         self.restart()
-
+        self.play_pause_btn.setIcon(self.play_icon)
+        
     def _apply_filter(self, *args, **kwargs):
         dlg = FilterDialog(self)
         accepted = dlg.exec_()
