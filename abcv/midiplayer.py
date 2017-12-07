@@ -4,13 +4,15 @@ from threading import Thread
 import mido
 
 class MidiPlayer(object):
-    def __init__(self):
+    def __init__(self, port_name=None):
 
-        # choose the first open port, for now
-        try:
-            self.port_name = self.ports[0]
-        except IndexError:
-            self.port_name = ""
+        if port_name:
+            self.port_name = port_name
+        else:
+            try:
+                self.port_name = self.ports[0]
+            except IndexError:
+                self.port_name = ""
             
         self._cur_time = 0
         self._filename = ""

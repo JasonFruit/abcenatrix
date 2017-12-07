@@ -46,7 +46,8 @@ _default_settings = {
     "Open directory": homedir,
     "Save directory": homedir,
     "Default fit": "width",
-    "MIDI instrument": 1
+    "MIDI instrument": 1,
+    "MIDI port": None
 }
 
 app_dir = os.path.join(homedir,

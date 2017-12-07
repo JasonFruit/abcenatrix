@@ -47,8 +47,9 @@ class Application(QMainWindow, MidiMixin):
     """The main ABCenatrix application window"""
     def __init__(self, settings, filename=None):
         QMainWindow.__init__(self)
-        MidiMixin.__init__(self)
-
+        
+        MidiMixin.__init__(self, settings.get("MIDI port"))
+            
         self.play_icon  = QIcon(
             "/usr/share/icons/Adwaita/48x48/actions/media-playback-start.png")
         self.pause_icon = QIcon(
@@ -173,6 +174,9 @@ class Application(QMainWindow, MidiMixin):
             self._load(filename)
         else:
             self._new_tunebook()
+
+        if not self.settings.get("MIDI port"):
+            self._choose_midi_port()
 
     @property
     def dirty(self):
@@ -634,5 +638,6 @@ class Application(QMainWindow, MidiMixin):
                                         ports.index(self.midi.port_name))
 
         if ok:
+            self.settings.set("MIDI port", port)
             self.midi.port_name = port
                                         

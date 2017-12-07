@@ -1,8 +1,8 @@
 from abcv.midiplayer import MidiPlayer
 
 class MidiMixin(object):
-    def __init__(self):
-        self.midi = MidiPlayer()
+    def __init__(self, port_name=None):
+        self.midi = MidiPlayer(port_name)
         self.paused = False
 
     def toggle_play(self):
