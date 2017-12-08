@@ -24,8 +24,9 @@ A4"""
 class AbcTuneEditor(QDialog, MidiMixin):
     def __init__(self, settings, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
-        MidiMixin.__init__(self)
+        MidiMixin.__init__(self, settings.get("MIDI port"))
         self.setMinimumSize(QSize(800, 600))
+        self.showMaximized()
         self.setModal(True)
 
         self.settings = settings
