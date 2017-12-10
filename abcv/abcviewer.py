@@ -439,17 +439,7 @@ class Application(QMainWindow, MidiMixin):
         printDialog = QPrintDialog(self)
 
         if printDialog.exec_() == QDialog.Accepted:
-            if os.name == "posix":
-                pageSize = (printDialog.printer().width(),
-                            printDialog.printer().height())
-                painter = QPainter()
-                painter.begin(printDialog.printer())
-                self.abc_display.svg.renderer().render(painter, QRect(0,
-                                                                      0,
-                                                                      pageSize[0],
-                                                                      pageSize[1]))
-            else:
-                self.abc_display.svg.print(printDialog.printer())
+            self.abc_display.svg.print(printDialog.printer())
 
         # reset the fit for screen display
         self.abc_display.fit_style = old_fit
