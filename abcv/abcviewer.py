@@ -223,6 +223,7 @@ class Application(QMainWindow, MidiMixin):
         # lines get a little long here but are unwrapped since they're
         # stereotyped and probably won't require frequent reading or
         # edits
+
         
         # Tunebook menu choices
         self.tunebook_open = addAction(self.tunebook_menu, "&Open", "Ctrl+O", self._prompt_load)
@@ -230,6 +231,11 @@ class Application(QMainWindow, MidiMixin):
         self.tunebook_new = addAction(self.tunebook_menu, "&New", "Ctrl+Shift+N", self._new_tunebook)
         self.tunebook_close = addAction(self.tunebook_menu, "&Close", "Ctrl+W", self._new_tunebook)
         self.tunebook_revert = addAction(self.tunebook_menu, "&Revert", "", self._revert_tunebook)
+        
+        self.tunebook_export_menu = self.tunebook_menu.addMenu("E&xport tunebook:")
+        self.tunebook_export_pdf = addAction(self.tunebook_export_menu, "As P&DF", "", self._export_pdf)
+        self.tunebook_export_ps = addAction(self.tunebook_export_menu, "As Po&stscript", "", self._export_ps)
+        
         self.tunebook_move_up = addAction(self.tunebook_menu, "Move tune &up", "Ctrl+Up", self._move_tune_up)
         self.tunebook_move_down = addAction(self.tunebook_menu, "Move tune &down", "Ctrl+Down", self._move_tune_down)
         
@@ -630,4 +636,35 @@ class Application(QMainWindow, MidiMixin):
         if ok:
             self.settings.set("MIDI port", port)
             self.midi.port_name = port
-                                        
+
+    def _prompt_export(self, format):
+        """Prompt for a file to load"""
+        dirname = self.settings.get("Save directory")
+            
+        filename, accept = QFileDialog.getSaveFileName(
+            self,
+            "Export Tunebook",
+            dirname,    
+            "%s files (*.%s" % (format.upper(), format.lower()))
+
+        if not filename.endswith("." + format.lower()):
+            filename += "." + format.lower()
+
+        return accept, filename
+    
+    def _export_pdf(self, *args, **kwargs):
+        accept, filename = self._prompt_export("pdf")
+        
+        tmp_fn = str(uuid4()) + ".ps"
+        
+        if accept:
+            os.system("""abcm2ps -O "%s" "%s" """ % (tmp_fn, self.abc_file.filename))
+            os.system("""ps2pdf "%s" "%s" """ % (tmp_fn, filename))
+            os.system("""rm "%s" """ % tmp_fn)
+
+    def _export_ps(self, *args, **kwargs):
+        accept, filename = self._prompt_export("ps")
+        
+        if accept:
+            os.system("""abcm2ps -O "%s" "%s" """ % (filename, self.abc_file.filename))
+            
