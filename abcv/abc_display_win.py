@@ -20,7 +20,7 @@ class AbcDisplay(QWidget):
     def __init__(self, tune=None, parent=None, fit=fits.FIT_ALL):
         QWidget.__init__(self, parent=parent)
 
-        self.fit_style = fit
+        self._fit_style = fit
         
         self.pages = 1
         self.page = 1
@@ -67,6 +67,19 @@ class AbcDisplay(QWidget):
         self._tune = new_val
         self.refresh()
 
+    @property
+    def fit_style(self):
+        return self._fit_style
+
+    @fit_style.setter
+    def fit_style(self, new_val):
+        self._fit_style = new_val
+
+        if self._fit_style == fits.FIT_WIDTH:
+            self.svg.setZoomFactor(self.svg.width() / (8.5 * 72.0) * 0.75)
+        else:
+            self.svg.setZoomFactor(self.svg.height() / (11.5 * 72.0) * 0.75)
+            
     def show_or_hide_pages(self):
         for wid in [self.page_back_button,
                     self.page_forward_button,
