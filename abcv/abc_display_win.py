@@ -20,7 +20,6 @@ class AbcDisplay(QWidget):
     def __init__(self, tune=None, parent=None, fit=fits.FIT_ALL):
         QWidget.__init__(self, parent=parent)
 
-        self._fit_style = fit
         
         self.pages = 1
         self.page = 1
@@ -57,6 +56,8 @@ class AbcDisplay(QWidget):
             self.tune = tune
         else:
             self._tune = None
+
+        self.fit_style = fit
 
     @property
     def tune(self):
