@@ -7,9 +7,13 @@ import tempfile
 from uuid import uuid4
 
 # Import the core and GUI elements of Qt
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtWebKit import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtWebKit import *
+# from PySide.QtCore import *
+# from PySide.QtGui import *
+# from PySide.QtWebKit import *
 from abcv.scrollable_svg import fits
 
 def _make_tmp_fn():
@@ -27,7 +31,7 @@ class AbcDisplay(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        width, height = self.size().toTuple()
+        width, height = self.size().width(), self.size().height()
 
         self.svg = QWebView()
 

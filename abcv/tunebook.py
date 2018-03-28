@@ -86,9 +86,14 @@ contents are the top-level properties of the tune.  Also has:
         abc = self.content
 
         # insert an abc2midi directive for the instrument if needed
+        # and possible
         if midi_program != None:
-            midi_pos = abc.index("\n", abc.index("\nK:") + 1)
-            abc = abc[:midi_pos] + "\n%%%%MIDI program %s\n" % midi_program + abc[midi_pos + 1:]
+            try:
+                midi_pos = abc.index("\n", abc.index("\nK:") + 1)
+                abc = abc[:midi_pos] + "\n%%%%MIDI program %s\n" % midi_program + abc[midi_pos + 1:]
+            except ValueError:
+                pass
+                
         with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
             tmp_fn = f.name
 

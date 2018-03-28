@@ -7,8 +7,12 @@ import os, platform, sys, tempfile, codecs
 from uuid import uuid4
 import webbrowser as wb
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+# from PySide.QtCore import *
+# from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+# from PyQt5.QtWebkit import *
 
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
@@ -263,7 +267,7 @@ class Application(QMainWindow, MidiMixin):
         self.tune_info = addAction(self.tune_menu, "&Info", "Ctrl+I", self._tune_info)
 
         # playback menu choices
-        self.playback_start = addAction(self.playback_menu, "&Start/Stop", QKeySequence(Qt.Key.Key_Space), self._playback_start)
+        self.playback_start = addAction(self.playback_menu, "&Start/Stop", " ", self._playback_start)
         self.playback_restart = addAction(self.playback_menu, "&Jump to start", "Ctrl+J", self._playback_restart)
         self.playback_port = addAction(self.playback_menu, "&Choose MIDI port", "", self._choose_midi_port)
 

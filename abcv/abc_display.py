@@ -7,8 +7,9 @@ import tempfile
 from uuid import uuid4
 
 # Import the core and GUI elements of Qt
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from abcv.scrollable_svg import ScrollableSvgWidget, fits
 from abcv.os_ifdef import is_linux
 
@@ -16,7 +17,7 @@ def _make_tmp_fn():
     tempdir = tempfile.gettempdir()
     return os.path.join(tempdir, "%s.svg" % uuid4())
 
-if False:
+if True:
     class AbcDisplay(QWidget):
         def __init__(self, tune=None, parent=None, fit=fits.FIT_ALL):
             QWidget.__init__(self, parent=parent)
@@ -27,7 +28,7 @@ if False:
             self.layout = QVBoxLayout()
             self.setLayout(self.layout)
 
-            width, height = self.size().toTuple()
+            width, height = self.size().width(), self.size().height()
 
             self.svg = ScrollableSvgWidget(height, width, fit_style=fits.FIT_WIDTH)
 
@@ -62,7 +63,7 @@ if False:
                 self._tune = None
 
         def resizeEvent(self, *args, **kwargs):
-            self.svg.visible_width, self.svg.visible_height = self.size().toTuple()
+            self.svg.visible_width, self.svg.visible_height = self.size().width(), self.size().height()
             self.refresh()
 
         @property

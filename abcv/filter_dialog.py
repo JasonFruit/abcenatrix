@@ -2,8 +2,13 @@
 
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+# from PySide.QtCore import *
+# from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+# from PyQt5.QtWebkit import *
+
 from abcv.tunebook import information_fields
 
 _good_chars = "abcdefghijklmnopqrstuvwxyz "

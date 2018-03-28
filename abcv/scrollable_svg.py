@@ -3,9 +3,13 @@
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
 # Import the core and GUI elements of Qt
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtSvg import QSvgWidget
+# from PySide.QtCore import *
+# from PySide.QtGui import *
+# from PySide.QtSvg import QSvgWidget
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtSvg import QSvgWidget
 
 class Fits(object):
     def __init__(self):
@@ -31,7 +35,7 @@ class ScrollableSvgWidget(QSvgWidget):
     def paintEvent(self, paint_event):
         painter = QPainter(self)
         
-        default_width, default_height = self.renderer().defaultSize().toTuple()
+        default_width, default_height = self.renderer().defaultSize().width(), self.renderer().defaultSize().height()
         widget_width = self.visible_width
 
         left = 0
@@ -43,10 +47,10 @@ class ScrollableSvgWidget(QSvgWidget):
             new_size = QSize(widget_width, self.visible_height)
             self.resize(new_size)
             self.renderer().render(painter,
-                                   QRect(left,
-                                         top,
-                                         new_width,
-                                         self.visible_height))
+                                   QRectF(left,
+                                          top,
+                                          new_width,
+                                          self.visible_height))
             
         elif self.fit_style == fits.FIT_WIDTH:
             scale_by = widget_width / default_width
@@ -54,7 +58,7 @@ class ScrollableSvgWidget(QSvgWidget):
             new_size = QSize(widget_width, new_height)
             self.resize(new_size)
             self.renderer().render(painter,
-                                   QRect(left,
-                                         top,
-                                         widget_width,
-                                         new_height))
+                                   QRectF(left,
+                                          top,
+                                          widget_width,
+                                          new_height))

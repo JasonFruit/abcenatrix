@@ -4,8 +4,12 @@ from __future__ import nested_scopes, generators, division, absolute_import, wit
 
 from uuid import uuid4
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+# from PySide.QtCore import *
+# from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+# from PyQt5.QtWebkit import *
 import os, tempfile
 from abcv.tunebook import tune_from_abc
 
@@ -25,9 +29,6 @@ class AbcTuneEditor(QDialog, MidiMixin):
     def __init__(self, settings, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
         MidiMixin.__init__(self, settings.get("MIDI port"))
-        self.setMinimumSize(QSize(800, 600))
-        self.showMaximized()
-        self.setModal(True)
 
         self.settings = settings
 
@@ -68,7 +69,11 @@ class AbcTuneEditor(QDialog, MidiMixin):
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         self.vbox.addWidget(self.buttons)
-        
+
+        self.setMinimumSize(QSize(800, 600))
+        self.showMaximized()
+        self.setModal(True)
+
         self.redraw_tune()
 
     def _on_text_change(self, *args, **kwargs):
