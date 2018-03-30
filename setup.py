@@ -13,9 +13,9 @@ def read(fname):
 # preinstallation dependencies of its own, and would unduly limit
 # Python versions we could use, so don't even try
 if os.name == "posix":
-    requirements = ["mido"]
+    requirements = ["mido", "python-rtmidi"]
 else:
-    requirements = ["pyside", "mido"]
+    requirements = ["pyside", "mido", "python-rtmidi"]
     
 setup(
     name = "abcenatrix",

@@ -7,23 +7,22 @@ import os, platform, sys, tempfile, codecs
 from uuid import uuid4
 import webbrowser as wb
 
-# from PySide.QtCore import *
-# from PySide.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-# from PyQt5.QtWebkit import *
+from PyQt5.QtPrintSupport import *
 
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
-
 from abcv.abc_display import AbcDisplay
-    
 from abcv.tune_editor import AbcTuneEditor
 from abcv.filter_dialog import FilterDialog
-from abcv.settings_dialog import SettingsDialog
+from abcv.settings_dialog import SettingsDialog, ToolSettingsDialog
 from abcv.about import about_text
 from abcv.midi_mixin import MidiMixin
+import abcv.tools as tools
+
+ps_to_pdf_cmd = '%s -o %s -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -dHaveTrueTypes=true -dEmbedAllFonts=true -dSubsetFonts=false -c ".setpdfwrite <</NeverEmbed [ ]>> setdistillerparams" -f %s'
 
 class TuneListItem(QListWidgetItem):
     """A QListItem that can carry a tune"""
@@ -181,6 +180,21 @@ class Application(QMainWindow, MidiMixin):
 
         if not self.settings.get("MIDI port"):
             self._choose_midi_port()
+
+        # try to update empty tool paths with something on the PATH
+        for command in tools.commands:
+            if not self.settings.get("%s location" % command):
+                tmp_path = tools.default_tool_path(command)
+                if tmp_path:
+                    self.settings.set("%s location" % command,
+                                      tmp_path)
+                    
+        # if there are any tools left without paths
+        if "" in map(self.settings.get,
+                     ["%s location" % cmd
+                      for cmd in tools.commands]):
+            tsd = ToolSettingsDialog(self.settings)
+            tsd.exec_()
 
     @property
     def dirty(self):
@@ -449,7 +463,10 @@ class Application(QMainWindow, MidiMixin):
         printDialog = QPrintDialog(self)
 
         if printDialog.exec_() == QDialog.Accepted:
-            self.abc_display.svg.print(printDialog.printer())
+            painter = QPainter(printDialog.printer())
+            self.abc_display.svg.render(painter)
+            painter.end()
+            # self.abc_display.svg.print(printDialog.printer())
 
         # reset the fit for screen display
         self.abc_display.fit_style = old_fit
@@ -662,13 +679,22 @@ class Application(QMainWindow, MidiMixin):
         tmp_fn = str(uuid4()) + ".ps"
         
         if accept:
-            os.system("""abcm2ps -O "%s" "%s" """ % (tmp_fn, self.abc_file.filename))
-            os.system("""ps2pdf "%s" "%s" """ % (tmp_fn, filename))
+            cmd = """%s -O "%s" "%s" """ % (self.settings.get("abcm2ps location"),
+                                            tmp_fn,
+                                            self.abc_file.filename)
+        
+            os.system(cmd)
+            cmd = ps_to_pdf_cmd % (self.settings.get("gs location"),
+                                       filename,
+                                       tmp_fn)
+            os.system(cmd)
             os.system("""rm "%s" """ % tmp_fn)
 
     def _export_ps(self, *args, **kwargs):
         accept, filename = self._prompt_export("ps")
-        
+        cmd = """%s -O "%s" "%s" """ % (self.settings.get("abcm2ps location"),
+                                        filename,
+                                        self.abc_file.filename)
         if accept:
-            os.system("""abcm2ps -O "%s" "%s" """ % (filename, self.abc_file.filename))
+            os.system(cmd)
             

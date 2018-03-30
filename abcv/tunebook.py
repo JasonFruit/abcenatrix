@@ -8,6 +8,8 @@ import tempfile
 from copy import deepcopy
 from subprocess import check_output
 
+from abcv.settings import Settings
+
 information_fields = {
     "X": "Reference number",
     "T": "Tune title",
@@ -25,21 +27,20 @@ information_fields = {
     "H": "History",
     "K": "Key"}
 
-tools_dir = os.path.abspath(os.path.join(os.path.join(os.path.dirname(__file__), ".."), "tools"))
+if os.name == "nt":
+    homedir = os.environ["HOMEPATH"]
+else:
+    homedir = os.environ["HOME"]
+    
+app_dir = os.path.join(homedir,
+                       ".abcenatrix")
 
-def tool_path(tool):
-    tp = os.path.join(tools_dir, tool)
-    if os.path.exists(tp):
-        return tp
-    elif os.path.exists(tp + ".exe"):
-        return tp + ".exe"
-    else:
-        return tool
+def init(settings_in):
+    global settings
+    settings = settings_in
 
-abc2midi = tool_path("abc2midi")
-abc2abc = tool_path("abc2abc")
-abcm2ps = tool_path("abcm2ps")
-        
+init(Settings(os.path.join(app_dir, "settings.json")))
+
 
 def tune_from_abc(abc):
     lines = abc.split("\n")
@@ -116,7 +117,7 @@ contents are the top-level properties of the tune.  Also has:
         # convert to an SVG; abcm2ps adds 001 to the base filename
         # (and for succeeding pages, 002, 003 …)
         os.system(
-            abcm2ps + " -v -O %(filename)s %(tmpfile)s" %
+            settings.get("abcm2ps location") + " -v -O %(filename)s %(tmpfile)s" %
             {"filename": filename,
              "tmpfile": tmp_fn})
 
@@ -145,7 +146,7 @@ contents are the top-level properties of the tune.  Also has:
             
         # convert to MIDI
         os.system(
-            abc2midi + " %(tmpfile)s -o %(filename)s" %
+            settings.get("abc2midi location") + " %(tmpfile)s -o %(filename)s" %
             {"filename": filename,
              "tmpfile": tmp_fn})
 
@@ -173,7 +174,7 @@ original unchanged."""
         tmp_fn = self._write_temp_file()
             
         self.update_from_abc(
-            check_output([abc2abc, tmp_fn] + abc2abc_args).decode("utf-8"))
+            check_output([settings.get("abc2abc location"), tmp_fn] + abc2abc_args).decode("utf-8"))
         
 
 # order of encodings to try when opening files, ordered by prevalence

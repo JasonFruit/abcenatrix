@@ -2,17 +2,14 @@
 
 from __future__ import nested_scopes, generators, division, absolute_import, with_statement, print_function, unicode_literals
 
+import os, tempfile
 from uuid import uuid4
 
-# from PySide.QtCore import *
-# from PySide.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-# from PyQt5.QtWebkit import *
-import os, tempfile
-from abcv.tunebook import tune_from_abc
 
+import abcv.tunebook as tunebook
 from abcv.abc_display import AbcDisplay, fits
 from abcv.midi_mixin import MidiMixin
 
@@ -29,6 +26,7 @@ class AbcTuneEditor(QDialog, MidiMixin):
     def __init__(self, settings, tune=None, parent=None):
         QDialog.__init__(self, parent=parent)
         MidiMixin.__init__(self, settings.get("MIDI port"))
+        tunebook.init(settings)
 
         self.settings = settings
 
@@ -36,7 +34,7 @@ class AbcTuneEditor(QDialog, MidiMixin):
                                               self.settings.get("User email"))
 
         if not tune:
-            tune = tune_from_abc(self.tune_template)
+            tune = tunebook.tune_from_abc(self.tune_template)
             
         self._tune = tune
         self.vbox = QVBoxLayout()
@@ -116,7 +114,7 @@ class AbcTuneEditor(QDialog, MidiMixin):
         
     @property
     def tune(self):
-        return tune_from_abc(self.editor.document().toPlainText().strip())
+        return tunebook.tune_from_abc(self.editor.document().toPlainText().strip())
 
     @tune.setter
     def tune(self, new_tune):

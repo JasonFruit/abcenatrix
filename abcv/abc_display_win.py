@@ -121,32 +121,3 @@ class AbcDisplay(QWidget):
 
     def clear(self):
         self.svg.setContent("")
-
-if __name__ == "__main__":
-    from tunebook import *
-    abc = """X:1
-T:The Bonnie Lass o' Bon-Accord
-T: From Logie Collection
-M:4/4
-L:1/16
-Q:1/4=64
-Z: Jason R. Fruit <JasonFruit@gmail.com>
-K:A
-!f!E2 | A3B {AB}c3B .A2.A,2C2E2 | !2!A{BA}G!<(!(A!3!f) ec{c}B!<)!A !>(!{A}B4-B3!>)!c | A3B {AB}c3B .A2.C2.E2.=G2 |
-(FDFA) (GE!1!G!3!B) !2!A4-A2 :| (3("heroic"efg) | (!>!a3!tenuto!c) (d2f2) .e2.A2 !0!a2(!4!gf) | .e2.A2 (fe)(dc) {c}B4-B2 (3(!<(!ef!<)!g) |
-a3c d2f2 e2A2 a2 "plaintive"=G2 | (FDFA) (GEGB) A4-A2 (3(efg) | (a3!tenuto!c) (d2f2) .e2.A2 a2(gf) |
-.e2.A2 {Ag}(fe)(dc) {c}B4-B3c | (A,CEA !4!.c3)!3!.B .A2.C2.E2.=G2 | (FDFA) (GE!1!G!3!B) A4-A2 ||
-"VAR"!p!E2 | {AB}(AGAB) {AB}(cBAG) .A (A,B,C DEFG) | (AGAf) (ec{c}BA) ({A}B4!tenuto!B3c) | !f!(AGAB) cBAG .A (A,B,!1!C DEF!0!=G) |
-(FDFA) GEGB A4-A2 :| (3!<(!(ef!<)!g) | !>!!>(!a.g.f.e .d.!>)!c.B.A eAcA !>!a(GA).B | cAeA aedc {c}(B4 !tenuto!B2) (3(!<(!ef!<)!g) |
-.a.g.f.e .d.c.B.A eAcA !0!a(GA=G) | (FDFA) (GEGB) A4 A2 (3(efg | !>(!a).g.f.!>)!e .d.c.B.A eAcA a2(gf)
-eG(Aa) (fe)(dc) {c}B4-B3c | (A,CEA "_7 down"c!4!e!4!!0!a)(g "_9 up"aecA G!4!AE=G) | ("_rall."FDF!2!A G!4!f)(!3!!fermata!eG) {G}"_3rd Corde"A4-A2 ||
-K:Aminor
-!p!"_sadly""^Minor."E2 | A3B {AB}c3B A2A,2C2E2 | (A^GAB cAdc) (B4!tenuto!B2)E2 | A3Bc3B "^2nd"A2c2d2f2 & x8 A2C2D2F2 |
-({ef}ed"^3rd Corde"ef) (e2^G2) A4-A2 & ({EF}EDEF) (EDCB,) A,4-A,2 :| (3(e^f^g) | (a3=g)(.=f2.e2) .f2.e2.d2.c2 | (cBAB cAdc) B4-B2 (3(e^f^g) |
-%page2
-a3"""
-    tune = tune_from_abc(abc)
-    qa = QApplication([])
-    app = AbcDisplay(tune=tune, fit="")
-    app.showMaximized()
-    qa.exec_()
