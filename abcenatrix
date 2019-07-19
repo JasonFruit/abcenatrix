@@ -63,7 +63,7 @@ if not os.path.exists(app_dir):
 
 qt_app = QApplication(sys.argv)
 
-settings = Settings(os.path.join(app_dir, "settings.json"))
+settings = Settings(os.path.join(app_dir, "settings.json"), _default_settings)
 
 if settings.get("MIDI instrument") == None:
     settings.set("MIDI instrument", 1)

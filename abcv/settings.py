@@ -2,8 +2,9 @@ import os
 import codecs
 import json
 
+
 class Settings(object):
-    def __init__(self, filename):
+    def __init__(self, filename, _default_settings={}):
         self._filename = filename
 
         # create settings file if it doesn't exist
@@ -24,10 +25,19 @@ class Settings(object):
 
     def get(self, name):
         try:
-            return self._settings[name]
+            val = self._settings[name]
+            if type(val) == bytes:
+                return val.decode("utf-8").strip()
+            elif type(val) == str:
+                return val.strip()
+            else:
+                return val
         except KeyError:
             return None
 
     def set(self, name, value):
+        if type(value) == bytes:
+            value = value.decode("utf-8")
+            
         self._settings[name] = value
         self._save()
