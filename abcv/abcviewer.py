@@ -14,7 +14,10 @@ from PyQt5.QtPrintSupport import *
 
 from abcv.tunebook import AbcTune, AbcTunebook, information_fields
 from abcv.scrollable_svg import fits
-from abcv.abc_display import AbcDisplay
+
+# TODO: change this back to abcv.abc_display when fixed
+from abcv.abc_display_win import AbcDisplay
+
 from abcv.tune_editor import AbcTuneEditor
 from abcv.filter_dialog import FilterDialog
 from abcv.settings_dialog import SettingsDialog, ToolSettingsDialog
@@ -452,7 +455,8 @@ class Application(QMainWindow, MidiMixin):
             self.midi.stop()
 
         # prepare the mixer to play the new MIDI file
-        self.load_midi(self.tmp_midi)
+        if os.path.exists(self.tmp_midi):
+            self.load_midi(self.tmp_midi)
         
     def _print(self, *args, **kwargs):
         # save the fit for display and change to fit the whole page,

@@ -10,6 +10,7 @@ from uuid import uuid4
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtWebKitWidgets import *
 from PyQt5.QtWebKit import *
 # from PySide.QtCore import *
 # from PySide.QtGui import *
@@ -120,4 +121,4 @@ class AbcDisplay(QWidget):
             self.refresh()
 
     def clear(self):
-        self.svg.setContent("")
+        self.svg.setContent("".encode("utf-8"))

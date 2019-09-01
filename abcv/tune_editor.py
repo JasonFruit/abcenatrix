@@ -10,7 +10,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import abcv.tunebook as tunebook
-from abcv.abc_display import AbcDisplay, fits
+from abcv.abc_display_win import AbcDisplay, fits
 from abcv.midi_mixin import MidiMixin
 
 tune_template = """X:0
@@ -91,7 +91,8 @@ class AbcTuneEditor(QDialog, MidiMixin):
             self.tmp_midi,
             midi_program=self.settings.get("MIDI instrument"))
 
-        self.load_midi(self.tmp_midi)
+        if os.path.exists(self.tmp_midi):
+            self.load_midi(self.tmp_midi)
 
 
     def _set_up_menus(self):
