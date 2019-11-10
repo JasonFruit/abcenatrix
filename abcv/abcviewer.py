@@ -501,10 +501,15 @@ class Application(QMainWindow, MidiMixin):
 
     def _add_tune_to_new_tunebook(self, *args, **kwargs):
         """Prompt for a tunebook file to add tune to"""
+
+        save_dir = self.settings.get("Save directory")
+        if not save_dir:
+            save_dir = "~/"
+        
         filename, accept = QFileDialog.getSaveFileName(
             self,
             "Create New Tunebook",
-            os.path.join(self.settings.get("Save directory"),
+            os.path.join(save_dir,
                          "new.abc"),
             "ABC tunebooks (*.abc *.abc.txt)")
 

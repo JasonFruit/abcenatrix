@@ -114,6 +114,8 @@ contents are the top-level properties of the tune.  Also has:
         # write the tune to a temp file
         tmp_fn = self._write_temp_file()
 
+        print(tmp_fn)
+
         # convert to an SVG; abcm2ps adds 001 to the base filename
         # (and for succeeding pages, 002, 003 …)
         os.system(

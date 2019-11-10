@@ -61,6 +61,8 @@ if not os.path.exists(app_dir):
     print("Creating app directory at %s." % app_dir)
     os.mkdir(app_dir)
 
+settings_path = os.path.join(app_dir, "settings.json")
+
 qt_app = QApplication(sys.argv)
 
 settings = Settings(os.path.join(app_dir, "settings.json"), _default_settings)
