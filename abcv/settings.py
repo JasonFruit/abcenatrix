@@ -6,13 +6,18 @@ import json
 class Settings(object):
     def __init__(self, filename, _default_settings={}):
         self._filename = filename
-
+        
         # create settings file if it doesn't exist
         if not os.path.exists(self._filename):
+            self._ensure_settings_dir_exists()
             self._settings = _default_settings
             self._save()
         else:
             self._load()
+
+    def _ensure_settings_dir_exists(self):
+        dir = os.path.dirname(os.path.abspath(self._filename))
+        os.makedirs(dir)
             
     def _load(self):
         # load the settings file
